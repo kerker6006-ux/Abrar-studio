@@ -1,6 +1,7 @@
 .venv/
 .venv-build/
 .build-tools/
+.tools/
 build/
 dist/
 release/*.exe

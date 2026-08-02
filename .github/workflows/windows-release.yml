@@ -73,7 +73,7 @@ jobs:
           - Three complete unit and 720p render verification passes
           - Constant 24 FPS H.264 video and AAC 48 kHz audio
           - Checksum-locked recurring characters and fixed Korean Gemini voice profiles
-          - Articulated walk/run rigs, foot-contact correction, automatic footsteps, multi-character blocking, Korean visemes, camera/VFX, music, SFX and subtitles
+          - Complete-frame limited-animation loops, simple speaking mouths, blinks, expression swaps, automatic footsteps, multi-character blocking, camera moves, music, SFX and subtitles
           - SHA-256 integrity file for the automatic updater
           "@
           gh release view $tag 2>$null

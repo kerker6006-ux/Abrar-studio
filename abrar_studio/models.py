@@ -44,6 +44,30 @@ class VoiceProfile:
 
 
 @dataclass(slots=True)
+class AnimationSequence:
+    """A locked loop made from complete character drawings.
+
+    Complete frames avoid the rubber-limb artifacts produced by rotating cutout
+    body parts.  The low playback rate is intentional for limited animation.
+    """
+
+    frames: list[str]
+    fps: float = 8.0
+    loop: bool = True
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "AnimationSequence":
+        frames = [str(item) for item in data.get("frames", []) if str(item).strip()]
+        if not frames:
+            raise ModelError("Animation sequence requires at least one frame")
+        return cls(
+            frames=frames,
+            fps=_float(data.get("fps", 8.0), "animation fps", 1.0, 24.0),
+            loop=bool(data.get("loop", True)),
+        )
+
+
+@dataclass(slots=True)
 class CharacterManifest:
     character_id: str
     display_name: str
@@ -62,6 +86,9 @@ class CharacterManifest:
     identity_locked: bool = True
     rig_type: str = "locked_pose_rig_v3"
     articulated_rig: str = ""
+    animations: dict[str, AnimationSequence] = field(default_factory=dict)
+    visual_tier: str = "legacy"
+    mouth_anchor: list[float] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "CharacterManifest":
@@ -69,6 +96,14 @@ class CharacterManifest:
         value["voice_profile"] = VoiceProfile.from_dict(value["voice_profile"])
         value.setdefault("poses", {})
         value.setdefault("gestures", {})
+        value["animations"] = {
+            str(name): AnimationSequence.from_dict(sequence)
+            for name, sequence in value.get("animations", {}).items()
+        }
+        anchor = value.get("mouth_anchor", [])
+        if anchor and (not isinstance(anchor, list) or len(anchor) != 2):
+            raise ModelError("mouth_anchor must contain normalized x and y")
+        value["mouth_anchor"] = [float(item) for item in anchor]
         return cls(**value)
 
 

@@ -38,6 +38,7 @@ def _locked_asset_paths(manifest_path: Path, manifest: CharacterManifest) -> lis
         *manifest.mouths.values(),
         *manifest.poses.values(),
         *manifest.gestures.values(),
+        *(frame for sequence in manifest.animations.values() for frame in sequence.frames),
     }
     if manifest.articulated_rig:
         rel_paths.add(manifest.articulated_rig)

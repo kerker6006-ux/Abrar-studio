@@ -29,6 +29,12 @@
     "audio_profile": "Korean man in his late twenties. Calm, low and controlled, protective without sounding old, with restrained emotion."
   },
   "asset_checksums": {
+    "animations/walk/frame_01.png": "06317225a8f11e28b93faae4ac7e1c6bbbd7fa96b2fe2d47895c5be225056380",
+    "animations/walk/frame_02.png": "077ec8a3511ac6b4e1406e077fc42b60018dd37674627c8d3519a9525627b6ce",
+    "animations/walk/frame_03.png": "079ebb8a0941d8ac2817bc4c33f93367f53d402c6d38f5fbec6b95d26ab46b67",
+    "animations/walk/frame_04.png": "ba37bfe9635435f697aa256ba01800c6194e2b273eaa60a7a0d2831b095bcad6",
+    "animations/walk/frame_05.png": "1100481b65ae9888d76730b2a21688569fe112f52d31dc8864bdbdf26c6626e4",
+    "animations/walk/frame_06.png": "352454ccf6bc13267c48c5426071d696fae95879af4f0d5aeeab0ad05bda24d9",
     "expressions/anger.png": "f8c1ab1d085dd2e3df73eddae2af7c1ba96def7c93c870764bd208b266a5651c",
     "expressions/breakdown.png": "3458e3d6024061ca331b80d5c63134517b943aa5cdfe22ee9ff8553bc9c8ad80",
     "expressions/embarrassed.png": "3195bfca22d707464f7c46d5408fd15e44bf60aa28da76ea447b6c8905eddd1f",
@@ -56,7 +62,7 @@
     "poses/full_side.png": "d62d9cb506366419b3c1506a8091f90f468b70e98667bbf3eef5e2281b596a6c",
     "poses/full_three_quarter.png": "5754c29de9f7c114312c19bf41cbdd5aad2e0dabdab3ed1ba70c16b47ca23af7",
     "reference_sheet.png": "4a1b585c5c93926053c5b80e3a118fea985fa81aaf849977a4f3319a4c43be33",
-    "rig/rig.json": "71eb0f0c32f6dce8ade06a1b8b9229e9aca534a904ec917a39fc7946c1f4333d",
+    "rig/rig.json": "7b1a64b705029c90687a3f5967a769139b7abeee0275540fe782316d65c3d9f4",
     "rig/side/foot.png": "8d20ee30857dbe388a9aaee19d59dd5fd363e36e98957116fd90e4c598c8168a",
     "rig/side/head.png": "d92690eeadb66200a49874d60de690f0ec3d42a99f12cf8bc74df58bb09a8f62",
     "rig/side/lower_arm.png": "84d0722cf4a2dbd3e1b84a670df4beb38369ba13f196b83033efaa0784e2b69e",
@@ -91,5 +97,21 @@
     "point": "gestures/point.png",
     "stop": "gestures/stop.png"
   },
-  "articulated_rig": "rig/rig.json"
+  "articulated_rig": "rig/rig.json",
+  "visual_tier": "reference_limited_v1",
+  "mouth_anchor": [0.579, 0.145],
+  "animations": {
+    "walk": {
+      "frames": [
+        "animations/walk/frame_01.png",
+        "animations/walk/frame_02.png",
+        "animations/walk/frame_03.png",
+        "animations/walk/frame_04.png",
+        "animations/walk/frame_05.png",
+        "animations/walk/frame_06.png"
+      ],
+      "fps": 6.0,
+      "loop": true
+    }
+  }
 }

@@ -10,7 +10,7 @@ REQUIRED = [
     "assets/characters/seo_yeon/manifest.json", "assets/characters/min_jun/manifest.json",
     "sample_project/episode_001.json", "VERIFICATION_REPORT.md",
     "templates/episodes/school_betrayal.json", "templates/episodes/romance_confession.json",
-    "abrar_studio/character_packs.py", "abrar_studio/puppet.py",
+    "abrar_studio/character_packs.py", "abrar_studio/puppet.py", "abrar_studio/limited_animation.py",
     "templates/episodes/articulated_motion_showcase.json",
     "assets/characters/seo_yeon/rig/rig.json", "assets/characters/min_jun/rig/rig.json",
 ]

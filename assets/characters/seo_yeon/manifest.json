@@ -29,6 +29,12 @@
     "audio_profile": "Young Korean woman in her mid-twenties. Warm but alert, courageous, emotionally transparent, never childish."
   },
   "asset_checksums": {
+    "animations/walk/frame_01.png": "602f1615b4272c76bd190dd8ff5c75e222cf34fecb034cef2fd5f835e74b6272",
+    "animations/walk/frame_02.png": "732c8c443d1366830f0215c4931ad173cf4d5ae81a31931c17e829c9c641677d",
+    "animations/walk/frame_03.png": "c9502363562b1b95a58fc0c0b0f5454114cbd42ab69d25fa5ba366b2df6a57a8",
+    "animations/walk/frame_04.png": "09b31b97a6bc170ec98064a7e8e2b90ebafad361610268d5688f734203c3b541",
+    "animations/walk/frame_05.png": "565f5d4ef3b1c32d2f09a4f4f1d7d1c1ac197ca67eb6b2cce1a5e104dc78ed89",
+    "animations/walk/frame_06.png": "dc40b5901520f101c67c9c7d0ed53fac6687977d6d2850c9952267f2a9c483ad",
     "expressions/anger.png": "4a086ac5af5373765370bba4606d0540fb7770b0c53fb812fb44eef05b218be6",
     "expressions/breakdown.png": "43b7b5db6d04fd6f55ce05b09737c2a8d6a26b663b62a55c18bd51ad4c00738a",
     "expressions/embarrassed.png": "2b00d7e5110aa713f0c5c6dc0ca108568cbb27166cb93a1c54bff91f83c648b9",
@@ -56,7 +62,7 @@
     "poses/full_side.png": "122de036f63fd34becef8ed1b994671027fbc9a1efe1bbce56579eeb193e2f06",
     "poses/full_three_quarter.png": "04b34edbf5f6f2cf0c54462f118b4df4c99b9fc2de9dcfba9f81a872f2a8826a",
     "reference_sheet.png": "eb5aeb4ab34a8ef5ffb7f744cc408aac9bab5e2f850cc773ce7ec44ef2bb366b",
-    "rig/rig.json": "68856dca6fe30d39e904a648968ecf378bafe640f62d2fe104370afcaba38199",
+    "rig/rig.json": "a2eaa2a45bf4c0688f0394403f98cd610de99411788ff9e142c4e3e5220d5730",
     "rig/side/foot.png": "9c3c64cb1c558530ec58873d3d3ac7545f2090debae051e18da269d8ac3bec3d",
     "rig/side/hair_back.png": "8d4040294cf72d145c2c64c057567a5ae129dec474fc032e372be3251d34d86c",
     "rig/side/head.png": "d2b6df87f40634a5f2b99667ea2ce714b2e086f8df29d5b2d61432b1de0c77ee",
@@ -92,5 +98,21 @@
     "point": "gestures/point.png",
     "stop": "gestures/stop.png"
   },
-  "articulated_rig": "rig/rig.json"
+  "articulated_rig": "rig/rig.json",
+  "visual_tier": "reference_limited_v1",
+  "mouth_anchor": [0.568, 0.151],
+  "animations": {
+    "walk": {
+      "frames": [
+        "animations/walk/frame_01.png",
+        "animations/walk/frame_02.png",
+        "animations/walk/frame_03.png",
+        "animations/walk/frame_04.png",
+        "animations/walk/frame_05.png",
+        "animations/walk/frame_06.png"
+      ],
+      "fps": 6.0,
+      "loop": true
+    }
+  }
 }

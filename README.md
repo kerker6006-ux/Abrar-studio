@@ -1,21 +1,17 @@
-# Abrar Studio 3.0.5
+# Abrar Studio 3.1.0
 
-Abrar Studio is a local-first Windows application for Korean 2D cinematic motion-webtoon production. Version 3 adds an articulated side-view puppet engine so Seo-yeon and Min-jun can walk, run, stop, recoil and move across scenes with independently rotated limb segments, automatic footstep timing and tracking-camera travel.
+Abrar Studio is a local-first Windows application for Korean 2D cinematic motion-webtoon production. The reference-limited renderer uses approved complete character drawings for basic walking, speaking-mouth movement, blinks, expression swaps and camera moves. It does not generate a new video frame with an AI model during production.
 
-## Included motion system
+## Included limited-animation system
 
-The two locked lead characters include local, reusable articulated rigs with:
+Locked character packs can include local, reusable complete-frame loops with:
 
-- head and torso hierarchy
-- front/back upper arms and forearms
-- front/back thighs, lower legs and feet
-- Seo-yeon's delayed back-hair layer
-- idle breathing
-- slow, normal, confident and sad walks
-- normal and panicked runs
-- start-walk, sudden-stop, step-back and shock-recoil motions
-- speed, intensity, facing, phase-offset, ground-line and travel controls
-- two-person locomotion with staggered footsteps
+- whole-character walk drawings on one consistent transparent canvas
+- low-frame-rate holds that preserve anatomy and clean line art
+- simple speaking-mouth shapes and natural blink timing
+- locked portrait expressions and full-body pose swaps
+- speed, facing, phase-offset, ground-line and travel controls
+- multi-character staging, camera pans/zooms and timed footsteps
 
 These rig and motion files are installed once and remain on the PC. They are not downloaded for each video.
 
@@ -38,10 +34,10 @@ Version 3.0.5 prepares updates before shutdown, launches the PowerShell helper f
 ## Complete episode pipeline
 
 1. Create or import an episode JSON.
-2. Run Preflight to verify character checksums, fixed voice profiles, poses, articulated rigs, music, SFX and pacing.
+2. Run Preflight to verify character checksums, fixed voice profiles, complete-frame loops, music, SFX and pacing.
 3. Generate new Korean dialogue with Gemini TTS. Approved WAV files are cached locally.
 4. Abrar Studio derives mouth timing from the audio and applies close-up facial acting.
-5. Full-body shots use the articulated puppet engine for walk/run/action motion.
+5. Full-body locomotion uses checksum-locked complete drawings instead of rotating limb pieces.
 6. The renderer adds listener reactions, camera movement, transitions, VFX, subtitles, ambience, music ducking, footsteps and timed SFX.
 7. Final Validation blocks export if any identity, voice, rig, media or continuity gate fails.
 8. The episode renders at 1280×720, constant 24 FPS, H.264 video and 48 kHz AAC audio.
@@ -70,12 +66,12 @@ Run `python scripts/render_quality_demo.py` to generate `AbrarStudio_v3_Articula
 
 ## Locked consistency
 
-- Character identity assets and articulated rig parts are SHA-256 locked.
+- Character identity assets and complete-frame animation drawings are SHA-256 locked.
 - Seo-yeon permanently uses Gemini voice `Leda`.
 - Min-jun permanently uses Gemini voice `Orus`.
 - Approved dialogue is cached and is not regenerated during later renders.
-- Main characters are never redrawn by FLUX, Wan or another generative video model during normal production.
+- Main characters are never redrawn by a generative image or video model during normal production.
 
 ## Quality boundary
 
-Abrar Studio 3 matches the limited 2D bone/cutout motion style of webtoon drama channels: reusable walk/run loops, limb rotations, face/hand swaps in acting shots, fast camera work, effects and strong audio design. It does not claim frame-by-frame television-anime animation or detailed independent finger, cloth and hair simulation. New outfits and complex new actions still require a one-time approved layered asset pack.
+Abrar Studio targets limited webtoon drama: reusable complete-frame loops, face/pose swaps, simple talking and blinking, camera work, cuts and strong audio design. It does not claim frame-by-frame television-anime animation or detailed finger, cloth and hair simulation. New outfits and complex actions still require one-time approved artwork. “Technical readiness” verifies known file, timing and rendering failures; it never claims that a human has approved the final visual result.

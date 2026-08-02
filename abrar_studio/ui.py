@@ -125,7 +125,7 @@ class StudioApp(tk.Tk):
 
         nav_items = [
             ("Dashboard", "▦"), ("Characters", "◉"), ("Episode Script", "≡"), ("Shot Builder", "◫"),
-            ("Voice Studio", "◖"), ("Production", "▶"), ("Quality Check", "✓"),
+            ("Voice Studio", "◖"), ("Production", "▶"), ("Readiness Check", "✓"),
             ("Diagnostics", "i"),
             ("Settings", "⚙"),
         ]
@@ -150,7 +150,7 @@ class StudioApp(tk.Tk):
         self._pages["Shot Builder"] = self._build_shot_builder_page()
         self._pages["Voice Studio"] = self._build_voice_page()
         self._pages["Production"] = self._build_production_page()
-        self._pages["Quality Check"] = self._build_quality_page()
+        self._pages["Readiness Check"] = self._build_quality_page()
         self._pages["Diagnostics"] = self._build_diagnostics_page()
         self._pages["Settings"] = self._build_settings_page()
 
@@ -174,7 +174,7 @@ class StudioApp(tk.Tk):
             button.configure(bg=PANEL_2 if selected else "#0a0e18", fg=TEXT if selected else MUTED)
         if name == "Dashboard":
             self._refresh_dashboard()
-        elif name == "Quality Check":
+        elif name == "Readiness Check":
             self._run_validation(require_voices=False)
         elif name == "Shot Builder":
             self._shot_builder_refresh()
@@ -794,7 +794,7 @@ class StudioApp(tk.Tk):
         report = validator.validate(self.current_episode, require_voices=True)
         if not report.passed:
             self._display_report(report)
-            messagebox.showerror("Render blocked", "Final quality gates did not pass. Open Quality Check for details.", parent=self)
+            messagebox.showerror("Render blocked", "Production checks did not pass. Open Readiness Check for the exact reason.", parent=self)
             return
         output = self.project.render_dir / f"{self.current_episode.episode_id}_720p.mp4"
         renderer = AnimaticRenderer(self.project, self.settings.ffmpeg_path)
@@ -809,7 +809,7 @@ class StudioApp(tk.Tk):
 
     # Quality
     def _build_quality_page(self) -> tk.Frame:
-        page, body = self._new_page("Quality Gates", "A failed gate blocks final export; there is no silent quality downgrade")
+        page, body = self._new_page("Production Readiness", "Technical checks prevent known failures; visual approval still comes from reviewing the preview")
         toolbar = tk.Frame(body, bg=BG)
         toolbar.pack(fill="x", pady=(0, 12))
         self._button(toolbar, "Run Preflight", lambda: self._run_validation(require_voices=False), primary=True).pack(side="left")
@@ -850,9 +850,9 @@ class StudioApp(tk.Tk):
             "total_gates": len(report.results),
             "failed_gates": [item.gate for item in report.results if not item.passed],
         })
-        self.quality_summary.configure(text=f"Quality {report.score}/100 • {passed}/{len(report.results)} gates passed", fg=GREEN if report.passed else RED)
+        self.quality_summary.configure(text=f"Technical readiness {report.score}/100 • {passed}/{len(report.results)} checks passed", fg=GREEN if report.passed else RED)
         if hasattr(self, "production_log"):
-            self._prod_log(f"Quality validation: {passed}/{len(report.results)} passed")
+            self._prod_log(f"Production readiness: {passed}/{len(report.results)} passed")
             for item in report.results:
                 self._prod_log(f"{'PASS' if item.passed else 'BLOCK'} • {item.gate}: {item.detail}")
 

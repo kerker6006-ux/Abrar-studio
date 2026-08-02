@@ -53,6 +53,11 @@ def validate_character_pack(manifest_path: Path) -> CharacterManifest:
         raise CharacterPackError("Pack requires closed/open/wide/round/narrow mouth shapes")
     if not manifest.expressions or not manifest.poses:
         raise CharacterPackError("Pack requires expressions and full-body poses")
+    for name, sequence in manifest.animations.items():
+        if len(sequence.frames) < 2 and sequence.loop:
+            raise CharacterPackError(f"Loop '{name}' requires at least two complete frames")
+        if len(set(sequence.frames)) != len(sequence.frames):
+            raise CharacterPackError(f"Loop '{name}' contains duplicate frame paths")
     ok, errors = verify_manifest(manifest_path)
     if not ok:
         raise CharacterPackError("Checksum verification failed: " + "; ".join(errors))
