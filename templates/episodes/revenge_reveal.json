@@ -1,0 +1,105 @@
+{
+  "project_id": "abrar_studio",
+  "resolution": [
+    1280,
+    720
+  ],
+  "fps": 24,
+  "language": "ko-KR",
+  "content_rating": "teen",
+  "version": "2.0",
+  "episode_id": "TPL_REVENGE",
+  "title": "Revenge Reveal Template",
+  "scenes": [
+    {
+      "id": "s1",
+      "title": "Truth scan",
+      "location": "convenience store",
+      "dramatic_goal": "Deliver justice",
+      "shots": [
+        {
+          "id": "scan",
+          "duration": 2.5,
+          "character_id": "seo_yeon",
+          "dialogue": "스캐너는 거짓말하지 않아.",
+          "emotion": "determination",
+          "emotion_level": 4,
+          "camera": "push_in",
+          "background": "scanner_closeup.jpg",
+          "music": "scanner_reveal.wav",
+          "sfx": [
+            {
+              "cue": "scanner_beep.wav",
+              "at": 0.2
+            },
+            {
+              "cue": "electric_glitch.wav",
+              "at": 0.7
+            }
+          ],
+          "vfx": [
+            "scanner",
+            "glitch"
+          ],
+          "transition": "flash",
+          "actors": [
+            {
+              "character_id": "seo_yeon",
+              "position": "center",
+              "speaking": true,
+              "expression": "anger",
+              "pose": "portrait",
+              "acting": "lean",
+              "gesture": "none",
+              "gaze": "partner"
+            }
+          ]
+        },
+        {
+          "id": "justice",
+          "duration": 3.2,
+          "character_id": "min_jun",
+          "dialogue": "네가 숨긴 피해자는 한 명이 아니야.",
+          "emotion": "anger",
+          "emotion_level": 5,
+          "camera": "shake",
+          "background": "convenience_store_night.jpg",
+          "music": "revenge_resolve.wav",
+          "sfx": [
+            {
+              "cue": "revenge_hit.wav",
+              "at": 1.9
+            }
+          ],
+          "vfx": [
+            "anger",
+            "vignette"
+          ],
+          "transition": "cut",
+          "actors": [
+            {
+              "character_id": "min_jun",
+              "position": "left",
+              "speaking": true,
+              "expression": "anger",
+              "pose": "full_three_quarter",
+              "acting": "point",
+              "gesture": "none",
+              "gaze": "partner"
+            },
+            {
+              "character_id": "seo_yeon",
+              "position": "right",
+              "speaking": false,
+              "expression": "suspicious",
+              "pose": "portrait",
+              "acting": "listen",
+              "gesture": "none",
+              "gaze": "partner"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

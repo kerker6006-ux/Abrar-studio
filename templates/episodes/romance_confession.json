@@ -1,0 +1,98 @@
+{
+  "project_id": "abrar_studio",
+  "resolution": [
+    1280,
+    720
+  ],
+  "fps": 24,
+  "language": "ko-KR",
+  "content_rating": "teen",
+  "version": "2.0",
+  "episode_id": "TPL_ROMANCE",
+  "title": "Rooftop Confession Template",
+  "scenes": [
+    {
+      "id": "s1",
+      "title": "Confession",
+      "location": "school rooftop",
+      "dramatic_goal": "Romantic tension",
+      "shots": [
+        {
+          "id": "silence",
+          "duration": 3.0,
+          "character_id": "min_jun",
+          "dialogue": "매일 두 시 십사 분에 온 이유는… 너였어.",
+          "emotion": "romance",
+          "emotion_level": 4,
+          "camera": "slow_push",
+          "background": "school_rooftop_sunset.png",
+          "music": "tender_romance.wav",
+          "sfx": [
+            {
+              "cue": "romantic_chime.wav",
+              "at": 1.8,
+              "volume": 0.45
+            }
+          ],
+          "transition": "fade",
+          "actors": [
+            {
+              "character_id": "min_jun",
+              "position": "left",
+              "speaking": true,
+              "expression": "embarrassed",
+              "pose": "full_three_quarter",
+              "acting": "shy",
+              "gesture": "none",
+              "gaze": "partner"
+            },
+            {
+              "character_id": "seo_yeon",
+              "position": "right",
+              "speaking": false,
+              "expression": "shock",
+              "pose": "portrait",
+              "acting": "listen",
+              "gesture": "none",
+              "gaze": "partner"
+            }
+          ]
+        },
+        {
+          "id": "answer",
+          "duration": 2.7,
+          "character_id": "seo_yeon",
+          "dialogue": "그 말… 다시 해 봐.",
+          "emotion": "romance",
+          "emotion_level": 3,
+          "camera": "push_in",
+          "background": "school_rooftop_sunset.png",
+          "music": "tender_romance.wav",
+          "transition": "cut",
+          "actors": [
+            {
+              "character_id": "seo_yeon",
+              "position": "right",
+              "speaking": true,
+              "expression": "embarrassed",
+              "pose": "portrait",
+              "acting": "shy",
+              "gesture": "none",
+              "gaze": "partner"
+            },
+            {
+              "character_id": "min_jun",
+              "position": "left",
+              "speaking": false,
+              "expression": "smile",
+              "pose": "portrait",
+              "acting": "listen",
+              "gesture": "none",
+              "gaze": "partner"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

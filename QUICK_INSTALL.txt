@@ -1,0 +1,12 @@
+ABRAR STUDIO 3.0 — QUICK INSTALL
+
+1. Extract the entire ZIP.
+2. Double-click INSTALL_ABRAR_STUDIO.bat.
+3. Stay online while Python and FFmpeg are installed.
+4. The installer runs 3 unit-test passes and 3 articulated 720p render passes.
+5. Launch Abrar Studio from the Desktop shortcut.
+6. Settings -> enter a NEW Gemini API key -> Test Gemini.
+7. Open templates/episodes/articulated_motion_showcase.json to test walk/run motion.
+8. Production -> Preflight -> Generate Missing Voices -> Final Validation -> Render 720p.
+
+The character rigs and motion library are stored locally and are not downloaded per video.

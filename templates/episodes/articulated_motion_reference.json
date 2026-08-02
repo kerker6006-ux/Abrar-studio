@@ -1,0 +1,101 @@
+{
+  "project_id": "two_fourteen",
+  "episode_id": "TEMPLATE_MOTION_REFERENCE",
+  "title": "복도에서 시작된 추격",
+  "resolution": [1280, 720],
+  "fps": 24,
+  "version": "3.0",
+  "language": "ko-KR",
+  "scenes": [
+    {
+      "id": "HALLWAY_CHASE",
+      "title": "Hallway motion reference",
+      "location": "school hallway",
+      "dramatic_goal": "Demonstrate articulated walking, running, stopping and camera tracking",
+      "shots": [
+        {
+          "id": "WALK_CONFIDENT",
+          "duration": 2.8,
+          "background": "school_hallway_evening",
+          "music": "school_tension",
+          "ambience": "hallway_murmur",
+          "camera": "tracking_push",
+          "emotion": "determined",
+          "emotion_level": 3,
+          "transition": "cut",
+          "actors": [
+            {
+              "character_id": "seo_yeon",
+              "expression": "neutral",
+              "pose": "full_side",
+              "position": "left",
+              "motion": "walk_confident",
+              "motion_speed": 1.0,
+              "travel_x": 0.55,
+              "facing": "right",
+              "ground_y": 0.95,
+              "speaking": false
+            }
+          ],
+          "sfx": [],
+          "vfx": []
+        },
+        {
+          "id": "RUN_PANICKED",
+          "duration": 2.4,
+          "background": "school_hallway_evening",
+          "music": "chase_pulse",
+          "ambience": "hallway_murmur",
+          "camera": "tracking",
+          "emotion": "fear",
+          "emotion_level": 4,
+          "transition": "whip",
+          "actors": [
+            {
+              "character_id": "min_jun",
+              "expression": "shock",
+              "pose": "full_side",
+              "position": "far_right",
+              "motion": "run_panicked",
+              "motion_speed": 1.05,
+              "travel_x": -0.72,
+              "facing": "left",
+              "ground_y": 0.95,
+              "cycle_offset": 0.18,
+              "speaking": false
+            }
+          ],
+          "sfx": [{"cue": "heartbeat", "at": 0.0, "volume": 0.45}],
+          "vfx": ["speed_lines"]
+        },
+        {
+          "id": "STOP_SUDDEN",
+          "duration": 1.9,
+          "background": "school_hallway_evening",
+          "music": "confrontation_rise",
+          "ambience": "hallway_murmur",
+          "camera": "push_in",
+          "emotion": "shock",
+          "emotion_level": 4,
+          "transition": "flash",
+          "actors": [
+            {
+              "character_id": "seo_yeon",
+              "expression": "shock",
+              "pose": "full_side",
+              "position": "center",
+              "motion": "stop_sudden",
+              "motion_speed": 1.0,
+              "travel_x": 0.12,
+              "facing": "right",
+              "ground_y": 0.95,
+              "speaking": false
+            }
+          ],
+          "sfx": [{"cue": "impact", "at": 0.55, "volume": 0.7}],
+          "vfx": ["speed_lines"]
+        }
+      ]
+    }
+  ]
+}

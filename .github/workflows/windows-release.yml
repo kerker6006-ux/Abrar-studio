@@ -1,0 +1,79 @@
+name: Build, verify and release Abrar Studio
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows-release:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements-build.txt
+
+      - name: Read application version
+        id: app_version
+        shell: pwsh
+        run: |
+          $match = Select-String -Path "abrar_studio/constants.py" -Pattern '^APP_VERSION = "([^"]+)"'
+          if (-not $match) { throw "APP_VERSION was not found" }
+          $version = $match.Matches[0].Groups[1].Value
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "Building Abrar Studio $version"
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --yes --no-progress
+
+      - name: Build and verify three times
+        shell: pwsh
+        run: .\scripts\build_windows.ps1
+
+      - name: Upload verified installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AbrarStudio-${{ steps.app_version.outputs.version }}-Windows
+          path: |
+            release/AbrarStudio-Setup.exe
+            release/AbrarStudio-Setup.exe.sha256
+            release_verification_pass_1.json
+            release_verification_pass_2.json
+            release_verification_pass_3.json
+          if-no-files-found: error
+
+      - name: Publish checksum-verified automatic update release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APP_VERSION: ${{ steps.app_version.outputs.version }}
+        run: |
+          $tag = "v$env:APP_VERSION"
+          $notes = @"
+          Abrar Studio $env:APP_VERSION
+
+          - Windows x64 installer
+          - Three complete unit and 720p render verification passes
+          - Constant 24 FPS H.264 video and AAC 48 kHz audio
+          - Checksum-locked recurring characters and fixed Korean Gemini voice profiles
+          - Articulated walk/run rigs, foot-contact correction, automatic footsteps, multi-character blocking, Korean visemes, camera/VFX, music, SFX and subtitles
+          - SHA-256 integrity file for the automatic updater
+          "@
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --target $env:GITHUB_SHA --title "Abrar Studio $env:APP_VERSION" --notes $notes
+          } else {
+            gh release edit $tag --target $env:GITHUB_SHA --title "Abrar Studio $env:APP_VERSION" --notes $notes
+          }
+          gh release upload $tag release/AbrarStudio-Setup.exe release/AbrarStudio-Setup.exe.sha256 --clobber

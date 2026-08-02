@@ -1,0 +1,94 @@
+{
+  "project_id": "abrar_studio",
+  "resolution": [
+    1280,
+    720
+  ],
+  "fps": 24,
+  "language": "ko-KR",
+  "content_rating": "teen",
+  "version": "2.0",
+  "episode_id": "TPL_CRY",
+  "title": "Emotional Breakdown Template",
+  "scenes": [
+    {
+      "id": "s1",
+      "title": "Hidden pain",
+      "location": "bedroom",
+      "dramatic_goal": "Earn tears",
+      "shots": [
+        {
+          "id": "hold",
+          "duration": 3.4,
+          "character_id": "seo_yeon",
+          "dialogue": "괜찮다고 말하면… 정말 괜찮아질 줄 알았어.",
+          "emotion": "grief",
+          "emotion_level": 5,
+          "camera": "slow_push",
+          "background": "bedroom_blue_night.png",
+          "music": "crying_piano.wav",
+          "ambience": "rain_window.wav",
+          "sfx": [
+            {
+              "cue": "breath_shaky.wav",
+              "at": 0.1,
+              "volume": 0.6
+            }
+          ],
+          "vfx": [
+            "tears",
+            "vignette"
+          ],
+          "transition": "dip_black",
+          "actors": [
+            {
+              "character_id": "seo_yeon",
+              "position": "center",
+              "speaking": true,
+              "expression": "breakdown",
+              "pose": "portrait",
+              "acting": "collapse",
+              "gesture": "none",
+              "gaze": "partner"
+            }
+          ]
+        },
+        {
+          "id": "comfort",
+          "duration": 2.8,
+          "character_id": "min_jun",
+          "dialogue": "이제 혼자 버티지 마.",
+          "emotion": "sad",
+          "emotion_level": 4,
+          "camera": "pan_right",
+          "background": "bedroom_blue_night.png",
+          "music": "crying_piano.wav",
+          "ambience": "rain_window.wav",
+          "transition": "fade",
+          "actors": [
+            {
+              "character_id": "min_jun",
+              "position": "left",
+              "speaking": true,
+              "expression": "sad",
+              "pose": "portrait",
+              "acting": "lean",
+              "gesture": "none",
+              "gaze": "partner"
+            },
+            {
+              "character_id": "seo_yeon",
+              "position": "right",
+              "speaking": false,
+              "expression": "breakdown",
+              "pose": "portrait",
+              "acting": "listen",
+              "gesture": "none",
+              "gaze": "partner"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

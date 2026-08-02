@@ -1,0 +1,368 @@
+{
+  "project_id": "abrar_studio",
+  "episode_id": "QUALITY_TEST_01",
+  "title": "새벽 2시 14분 — 기억된 손님",
+  "resolution": [
+    1280,
+    720
+  ],
+  "fps": 24,
+  "version": "2.0",
+  "language": "ko-KR",
+  "content_rating": "teen",
+  "scenes": [
+    {
+      "id": "S01",
+      "title": "The scanner wakes",
+      "location": "Night24 convenience store",
+      "dramatic_goal": "Establish the rule and immediate danger",
+      "shots": [
+        {
+          "id": "S01_SH01",
+          "duration": 2.7,
+          "character_id": "seo_yeon",
+          "dialogue": "새벽 두 시 십사 분. 또 시작이네.",
+          "emotion": "suspicious",
+          "emotion_level": 3,
+          "camera": "push_in",
+          "background": "convenience_store_night",
+          "music": "scanner_mystery_low",
+          "ambience": "store_hum",
+          "sfx": [
+            {
+              "cue": "clock_tick",
+              "at": 0.2,
+              "volume": 0.9
+            }
+          ],
+          "vfx": [
+            "scanner"
+          ],
+          "transition": "fade",
+          "actors": [
+            {
+              "character_id": "seo_yeon",
+              "expression": "suspicious",
+              "pose": "portrait",
+              "position": "right",
+              "acting": "idle",
+              "gaze": "left",
+              "gesture": "none",
+              "speaking": true
+            }
+          ]
+        },
+        {
+          "id": "S01_SH02",
+          "duration": 2.8,
+          "character_id": "seo_yeon",
+          "dialogue": "구매자는 이미 스캔되었습니다. 십오 년 전에.",
+          "emotion": "shock",
+          "emotion_level": 5,
+          "camera": "shake_push_in",
+          "background": "scanner_closeup",
+          "music": "scanner_reveal",
+          "ambience": "store_hum",
+          "sfx": [
+            {
+              "cue": "scanner_beep",
+              "at": 0.05,
+              "volume": 1.0
+            },
+            {
+              "cue": "electric_glitch",
+              "at": 0.15,
+              "volume": 0.85
+            },
+            {
+              "cue": "bass_hit",
+              "at": 0.32,
+              "volume": 0.8
+            }
+          ],
+          "vfx": [
+            "scanner",
+            "glitch"
+          ],
+          "transition": "flash",
+          "voice_model": "pro",
+          "actors": [
+            {
+              "character_id": "seo_yeon",
+              "expression": "shock",
+              "pose": "portrait",
+              "position": "right",
+              "acting": "recoil",
+              "gaze": "camera",
+              "gesture": "none",
+              "speaking": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S02",
+      "title": "Min-jun enters",
+      "location": "Store entrance and counter",
+      "dramatic_goal": "Create chemistry, mystery and confrontation",
+      "shots": [
+        {
+          "id": "S02_SH01",
+          "duration": 2.6,
+          "character_id": "min_jun",
+          "dialogue": "그 문장을 그대로 믿으면 안 돼.",
+          "emotion": "suspicious",
+          "emotion_level": 3,
+          "camera": "pan_left_handheld",
+          "background": "store_entrance",
+          "music": "min_jun_mystery",
+          "ambience": "rain_distant",
+          "sfx": [
+            {
+              "cue": "door_chime",
+              "at": 0.0,
+              "volume": 0.95
+            }
+          ],
+          "vfx": [
+            "rain"
+          ],
+          "transition": "whip",
+          "actors": [
+            {
+              "character_id": "min_jun",
+              "expression": "suspicious",
+              "pose": "full_three_quarter",
+              "position": "left",
+              "acting": "walk",
+              "gaze": "right",
+              "speaking": true
+            },
+            {
+              "character_id": "seo_yeon",
+              "expression": "shock",
+              "pose": "portrait",
+              "position": "right",
+              "acting": "listen",
+              "gaze": "speaker",
+              "speaking": false,
+              "scale": 0.92,
+              "depth": -1,
+              "gesture": "none"
+            }
+          ]
+        },
+        {
+          "id": "S02_SH02",
+          "duration": 3.2,
+          "character_id": "seo_yeon",
+          "dialogue": "당신은 누구예요? 왜 매일 두 시 십삼 분에 나타나는 거죠?",
+          "emotion": "anger",
+          "emotion_level": 4,
+          "camera": "push_in_handheld",
+          "background": "convenience_store_night",
+          "music": "confrontation_rise",
+          "ambience": "store_hum",
+          "sfx": [
+            {
+              "cue": "clothing_grab",
+              "at": 0.42,
+              "volume": 0.75
+            },
+            {
+              "cue": "low_impact",
+              "at": 0.55,
+              "volume": 0.55
+            }
+          ],
+          "vfx": [
+            "speed_lines"
+          ],
+          "transition": "cut",
+          "voice_model": "pro",
+          "actors": [
+            {
+              "character_id": "seo_yeon",
+              "expression": "anger",
+              "pose": "portrait",
+              "position": "right",
+              "acting": "lean_in",
+              "gaze": "speaker",
+              "gesture": "none",
+              "speaking": true
+            },
+            {
+              "character_id": "min_jun",
+              "expression": "neutral",
+              "pose": "portrait",
+              "position": "left",
+              "acting": "listen",
+              "gaze": "speaker",
+              "speaking": false,
+              "scale": 0.94,
+              "depth": -1,
+              "gesture": "none"
+            }
+          ]
+        },
+        {
+          "id": "S02_SH03",
+          "duration": 3.1,
+          "character_id": "min_jun",
+          "dialogue": "문장은 언제나 진실이야. 하지만 진실에는 맥락이 없어.",
+          "emotion": "sad",
+          "emotion_level": 3,
+          "camera": "pull_out",
+          "background": "convenience_store_night",
+          "music": "unresolved_truth",
+          "ambience": "rain_window",
+          "sfx": [
+            {
+              "cue": "scanner_power_down",
+              "at": 2.25,
+              "volume": 0.7
+            }
+          ],
+          "vfx": [],
+          "transition": "dip_black",
+          "voice_model": "pro",
+          "actors": [
+            {
+              "character_id": "min_jun",
+              "expression": "sad",
+              "pose": "portrait",
+              "position": "left",
+              "acting": "idle",
+              "gaze": "down",
+              "gesture": "none",
+              "speaking": true
+            },
+            {
+              "character_id": "seo_yeon",
+              "expression": "suspicious",
+              "pose": "portrait",
+              "position": "right",
+              "acting": "listen",
+              "gaze": "speaker",
+              "speaking": false,
+              "scale": 0.94,
+              "depth": -1,
+              "gesture": "none"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S03",
+      "title": "The price",
+      "location": "Counter",
+      "dramatic_goal": "End on an emotional supernatural cliffhanger",
+      "shots": [
+        {
+          "id": "S03_SH01",
+          "duration": 3.0,
+          "character_id": "seo_yeon",
+          "dialogue": "그럼 바꿀 수는 있어요? 그 사람의 운명을.",
+          "emotion": "determined",
+          "emotion_level": 4,
+          "camera": "push_in",
+          "background": "convenience_store_night",
+          "music": "scanner_mystery_low",
+          "ambience": "store_hum",
+          "sfx": [
+            {
+              "cue": "heartbeat",
+              "at": 0.15,
+              "volume": 0.38
+            }
+          ],
+          "vfx": [
+            "scanner"
+          ],
+          "transition": "cut",
+          "voice_model": "pro",
+          "actors": [
+            {
+              "character_id": "seo_yeon",
+              "expression": "suspicious",
+              "pose": "portrait",
+              "position": "right",
+              "acting": "lean_in",
+              "gaze": "speaker",
+              "gesture": "none",
+              "speaking": true
+            },
+            {
+              "character_id": "min_jun",
+              "expression": "sad",
+              "pose": "portrait",
+              "position": "left",
+              "acting": "listen",
+              "gaze": "speaker",
+              "speaking": false,
+              "scale": 0.94,
+              "depth": -1,
+              "gesture": "none"
+            }
+          ]
+        },
+        {
+          "id": "S03_SH02",
+          "duration": 2.9,
+          "character_id": "min_jun",
+          "dialogue": "바꿀 수 있어. 대신 새벽이 끝나기 전에 대가를 알게 될 거야.",
+          "emotion": "fear",
+          "emotion_level": 4,
+          "camera": "push_in_handheld",
+          "background": "scanner_closeup",
+          "music": "unresolved_truth",
+          "ambience": "fluorescent_flicker",
+          "sfx": [
+            {
+              "cue": "electric_glitch",
+              "at": 1.8,
+              "volume": 0.55
+            },
+            {
+              "cue": "bass_hit",
+              "at": 2.35,
+              "volume": 0.75
+            }
+          ],
+          "vfx": [
+            "scanner",
+            "glitch"
+          ],
+          "transition": "flash",
+          "voice_model": "pro",
+          "actors": [
+            {
+              "character_id": "min_jun",
+              "expression": "sad",
+              "pose": "portrait",
+              "position": "left",
+              "acting": "idle",
+              "gaze": "camera",
+              "speaking": true,
+              "gesture": "none"
+            },
+            {
+              "character_id": "seo_yeon",
+              "expression": "shock",
+              "pose": "portrait",
+              "position": "right",
+              "acting": "recoil",
+              "gaze": "speaker",
+              "speaking": false,
+              "scale": 0.94,
+              "depth": -1,
+              "gesture": "none"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
