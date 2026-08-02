@@ -1,6 +1,6 @@
 [project]
 name = "abrar-studio"
-version = "3.1.0"
+version = "3.1.1"
 description = "Local-first 2D Korean motion-drama production studio"
 requires-python = ">=3.11"
 dependencies = [

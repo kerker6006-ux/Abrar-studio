@@ -112,6 +112,42 @@
       ],
       "fps": 6.0,
       "loop": true
+    },
+    "walk_normal": {
+      "frames": [
+        "animations/walk/frame_01.png",
+        "animations/walk/frame_02.png",
+        "animations/walk/frame_03.png",
+        "animations/walk/frame_04.png",
+        "animations/walk/frame_05.png",
+        "animations/walk/frame_06.png"
+      ],
+      "fps": 6.0,
+      "loop": true
+    },
+    "walk_confident": {
+      "frames": [
+        "animations/walk/frame_01.png",
+        "animations/walk/frame_02.png",
+        "animations/walk/frame_03.png",
+        "animations/walk/frame_04.png",
+        "animations/walk/frame_05.png",
+        "animations/walk/frame_06.png"
+      ],
+      "fps": 6.0,
+      "loop": true
+    },
+    "walk_slow": {
+      "frames": [
+        "animations/walk/frame_01.png",
+        "animations/walk/frame_02.png",
+        "animations/walk/frame_03.png",
+        "animations/walk/frame_04.png",
+        "animations/walk/frame_05.png",
+        "animations/walk/frame_06.png"
+      ],
+      "fps": 4.0,
+      "loop": true
     }
   }
 }

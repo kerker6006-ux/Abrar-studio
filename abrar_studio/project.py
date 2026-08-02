@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 from pathlib import Path
 from .models import CharacterManifest, Episode
@@ -56,7 +57,22 @@ class StudioProject:
             source = bundled_root / name
             target = self.assets_dir / name
             if source.exists():
-                shutil.copytree(source, target, dirs_exist_ok=True)
+                self._copytree_overwrite(source, target)
+
+    def _copytree_overwrite(self, source: Path, target: Path) -> None:
+        for path in source.rglob("*"):
+            rel = path.relative_to(source)
+            destination = target / rel
+            if path.is_dir():
+                destination.mkdir(parents=True, exist_ok=True)
+                continue
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            if destination.exists():
+                try:
+                    os.chmod(destination, 0o666)
+                except OSError:
+                    pass
+            shutil.copy2(path, destination)
 
     def character_manifest_path(self, character_id: str) -> Path:
         return self.assets_dir / "characters" / character_id / "manifest.json"

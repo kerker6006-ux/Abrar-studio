@@ -18,6 +18,7 @@ from .constants import POSITION_X
 from .gemini_tts import GeminiTTSClient
 from .limited_animation import frame_path as sequence_frame_path, sequence_name
 from .models import ActorCue, Episode, SFXCue, Shot
+from .paths import app_root
 from .project import StudioProject
 from .puppet import ArticulatedPuppetRenderer, footstep_times, normalize_motion, uses_articulated_motion
 from .visemes import viseme_shape
@@ -200,7 +201,7 @@ class AnimaticRenderer:
         candidate = Path(self.ffmpeg_path)
         if candidate.is_file():
             return str(candidate)
-        bundled = Path(__file__).resolve().parent.parent / "tools" / "ffmpeg.exe"
+        bundled = app_root() / "tools" / "ffmpeg.exe"
         if bundled.exists():
             return str(bundled)
         found = shutil.which(self.ffmpeg_path) or shutil.which("ffmpeg")

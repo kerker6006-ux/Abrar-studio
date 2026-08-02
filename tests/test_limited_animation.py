@@ -10,7 +10,7 @@ def test_complete_frame_walk_loop_cycles_without_bone_warping():
         character = project.character("min_jun")
         root = project.character_manifest_path("min_jun").parent
         name = sequence_name(character, "auto", "walk")
-        assert name == "walk"
+        assert name in {"walk", "walk_normal"}
         sequence = character.animations[name]
         assert len(sequence.frames) == 6
         assert frame_path(root, sequence, 0.0).name == "frame_01.png"
