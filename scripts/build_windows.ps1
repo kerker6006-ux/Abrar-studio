@@ -68,6 +68,13 @@ Copy-Item $ffmpegPath "dist\AbrarStudio\tools\ffmpeg.exe" -Force
 $ffprobe = Join-Path $ffmpegDir "ffprobe.exe"
 if (Test-Path $ffprobe) { Copy-Item $ffprobe "dist\AbrarStudio\tools\ffprobe.exe" -Force }
 
+New-Item -ItemType Directory -Force release | Out-Null
+$updatePackage = "release\AbrarStudio-Update.zip"
+Remove-Item $updatePackage -Force -ErrorAction SilentlyContinue
+Compress-Archive -Path "dist\AbrarStudio\*" -DestinationPath $updatePackage -CompressionLevel Optimal
+$updateHash = (Get-FileHash $updatePackage -Algorithm SHA256).Hash.ToLower()
+"$updateHash  AbrarStudio-Update.zip" | Set-Content -Encoding ascii "$updatePackage.sha256"
+
 $iscc = Get-Command ISCC.exe -ErrorAction SilentlyContinue
 if (-not $iscc) {
     $candidate = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
@@ -77,7 +84,6 @@ if (-not $iscc) {
     Write-Warning "Inno Setup 6 not found. Portable build is ready in dist\AbrarStudio."
     exit 0
 }
-New-Item -ItemType Directory -Force release | Out-Null
 & $iscc.Source ("/DMyAppVersion={0}" -f $AppVersion) "installer\AbrarStudio.iss"
 if ($LASTEXITCODE -ne 0) { throw "Installer build failed" }
 
@@ -85,3 +91,4 @@ $setup = Get-Item "release\AbrarStudio-Setup.exe"
 $hash = (Get-FileHash $setup.FullName -Algorithm SHA256).Hash.ToLower()
 "$hash  AbrarStudio-Setup.exe" | Set-Content -Encoding ascii "release\AbrarStudio-Setup.exe.sha256"
 Write-Host "Build complete: $($setup.FullName)"
+Write-Host "In-place update complete: $updatePackage"
