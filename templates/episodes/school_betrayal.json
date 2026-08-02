@@ -1,0 +1,99 @@
+{
+  "project_id": "abrar_studio",
+  "resolution": [
+    1280,
+    720
+  ],
+  "fps": 24,
+  "language": "ko-KR",
+  "content_rating": "teen",
+  "version": "2.0",
+  "episode_id": "TPL_SCHOOL",
+  "title": "School Betrayal Template",
+  "scenes": [
+    {
+      "id": "s1",
+      "title": "The rumor",
+      "location": "school hallway",
+      "dramatic_goal": "Expose a betrayal",
+      "shots": [
+        {
+          "id": "hook",
+          "duration": 2.8,
+          "character_id": "seo_yeon",
+          "dialogue": "그 소문, 네가 시작한 거지?",
+          "emotion": "suspicion",
+          "emotion_level": 4,
+          "camera": "push_in",
+          "background": "school_hallway_evening.png",
+          "music": "betrayal_pulse.wav",
+          "ambience": "hallway_murmur.wav",
+          "sfx": [
+            {
+              "cue": "school_bell.wav",
+              "at": 0.1,
+              "volume": 0.5
+            }
+          ],
+          "vfx": [
+            "vignette"
+          ],
+          "transition": "cut",
+          "actors": [
+            {
+              "character_id": "seo_yeon",
+              "position": "right",
+              "speaking": true,
+              "expression": "suspicious",
+              "pose": "portrait",
+              "acting": "lean",
+              "gesture": "none",
+              "gaze": "partner"
+            }
+          ]
+        },
+        {
+          "id": "reaction",
+          "duration": 2.4,
+          "character_id": "min_jun",
+          "dialogue": "증거는 이미 있어.",
+          "emotion": "determination",
+          "emotion_level": 3,
+          "camera": "pan_left",
+          "background": "school_hallway_evening.png",
+          "music": "school_tension.wav",
+          "ambience": "hallway_murmur.wav",
+          "sfx": [
+            {
+              "cue": "phone_buzz.wav",
+              "at": 0.5
+            }
+          ],
+          "transition": "whip",
+          "actors": [
+            {
+              "character_id": "min_jun",
+              "position": "left",
+              "speaking": true,
+              "expression": "suspicious",
+              "pose": "full_three_quarter",
+              "acting": "point",
+              "gesture": "none",
+              "gaze": "partner"
+            },
+            {
+              "character_id": "seo_yeon",
+              "position": "right",
+              "speaking": false,
+              "expression": "shock",
+              "pose": "portrait",
+              "acting": "recoil",
+              "gesture": "none",
+              "gaze": "partner"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

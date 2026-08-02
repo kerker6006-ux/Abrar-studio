@@ -1,0 +1,16 @@
+.venv/
+.venv-build/
+.build-tools/
+build/
+dist/
+release/*.exe
+release/*.sha256
+__pycache__/
+.pytest_cache/
+*.pyc
+*.log
+verification_sample_*.mp4
+verification_frame_*.png
+release_verification*.json
+diagnostics_report.json
+_recovered_bundle/

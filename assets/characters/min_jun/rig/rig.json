@@ -1,0 +1,340 @@
+{
+  "format": "abrar_articulated_rig_v1",
+  "character_id": "min_jun",
+  "view": "side",
+  "source_size": [
+    163,
+    670
+  ],
+  "root": [
+    98,
+    350
+  ],
+  "ground_y": 658,
+  "joints": {
+    "neck": [
+      85,
+      108
+    ],
+    "shoulder": [
+      92,
+      145
+    ],
+    "elbow": [
+      84,
+      265
+    ],
+    "wrist": [
+      67,
+      345
+    ],
+    "knee": [
+      104,
+      485
+    ],
+    "ankle": [
+      104,
+      620
+    ],
+    "toe": [
+      48,
+      648
+    ]
+  },
+  "parts": {
+    "arm_back_upper": {
+      "file": "rig/side/upper_arm.png",
+      "pivot": [
+        44,
+        10
+      ],
+      "source_pivot": [
+        92,
+        145
+      ],
+      "bbox": [
+        48,
+        135,
+        115,
+        315
+      ],
+      "parent": "torso",
+      "rest_offset": [
+        -1,
+        -207
+      ],
+      "z": 1,
+      "brightness": 0.76
+    },
+    "arm_back_lower": {
+      "file": "rig/side/lower_arm.png",
+      "pivot": [
+        42,
+        20
+      ],
+      "source_pivot": [
+        84,
+        265
+      ],
+      "bbox": [
+        42,
+        245,
+        103,
+        390
+      ],
+      "parent": "arm_back_upper",
+      "rest_offset": [
+        -8,
+        120
+      ],
+      "z": 2,
+      "brightness": 0.76
+    },
+    "leg_back_upper": {
+      "file": "rig/side/upper_leg.png",
+      "pivot": [
+        30,
+        25
+      ],
+      "source_pivot": [
+        98,
+        350
+      ],
+      "bbox": [
+        68,
+        325,
+        137,
+        520
+      ],
+      "parent": "torso",
+      "rest_offset": [
+        -5,
+        0
+      ],
+      "z": 3,
+      "brightness": 0.73
+    },
+    "leg_back_lower": {
+      "file": "rig/side/lower_leg.png",
+      "pivot": [
+        31,
+        30
+      ],
+      "source_pivot": [
+        104,
+        485
+      ],
+      "bbox": [
+        73,
+        455,
+        138,
+        640
+      ],
+      "parent": "leg_back_upper",
+      "rest_offset": [
+        6,
+        135
+      ],
+      "z": 4,
+      "brightness": 0.73
+    },
+    "foot_back": {
+      "file": "rig/side/foot.png",
+      "pivot": [
+        73,
+        25
+      ],
+      "source_pivot": [
+        104,
+        620
+      ],
+      "bbox": [
+        31,
+        595,
+        140,
+        665
+      ],
+      "parent": "leg_back_lower",
+      "rest_offset": [
+        0,
+        135
+      ],
+      "z": 5,
+      "brightness": 0.73
+    },
+    "torso": {
+      "file": "rig/side/torso.png",
+      "pivot": [
+        63,
+        258
+      ],
+      "source_pivot": [
+        98,
+        350
+      ],
+      "bbox": [
+        35,
+        92,
+        165,
+        370
+      ],
+      "parent": null,
+      "rest_offset": [
+        0,
+        0
+      ],
+      "z": 6
+    },
+    "leg_front_upper": {
+      "file": "rig/side/upper_leg.png",
+      "pivot": [
+        30,
+        25
+      ],
+      "source_pivot": [
+        98,
+        350
+      ],
+      "bbox": [
+        68,
+        325,
+        137,
+        520
+      ],
+      "parent": "torso",
+      "rest_offset": [
+        5,
+        0
+      ],
+      "z": 7
+    },
+    "leg_front_lower": {
+      "file": "rig/side/lower_leg.png",
+      "pivot": [
+        31,
+        30
+      ],
+      "source_pivot": [
+        104,
+        485
+      ],
+      "bbox": [
+        73,
+        455,
+        138,
+        640
+      ],
+      "parent": "leg_front_upper",
+      "rest_offset": [
+        6,
+        135
+      ],
+      "z": 8
+    },
+    "foot_front": {
+      "file": "rig/side/foot.png",
+      "pivot": [
+        73,
+        25
+      ],
+      "source_pivot": [
+        104,
+        620
+      ],
+      "bbox": [
+        31,
+        595,
+        140,
+        665
+      ],
+      "parent": "leg_front_lower",
+      "rest_offset": [
+        0,
+        135
+      ],
+      "z": 9
+    },
+    "arm_front_upper": {
+      "file": "rig/side/upper_arm.png",
+      "pivot": [
+        44,
+        10
+      ],
+      "source_pivot": [
+        92,
+        145
+      ],
+      "bbox": [
+        48,
+        135,
+        115,
+        315
+      ],
+      "parent": "torso",
+      "rest_offset": [
+        -6,
+        -205
+      ],
+      "z": 10
+    },
+    "arm_front_lower": {
+      "file": "rig/side/lower_arm.png",
+      "pivot": [
+        42,
+        20
+      ],
+      "source_pivot": [
+        84,
+        265
+      ],
+      "bbox": [
+        42,
+        245,
+        103,
+        390
+      ],
+      "parent": "arm_front_upper",
+      "rest_offset": [
+        -8,
+        120
+      ],
+      "z": 11
+    },
+    "head": {
+      "file": "rig/side/head.png",
+      "pivot": [
+        53,
+        108
+      ],
+      "source_pivot": [
+        85,
+        108
+      ],
+      "bbox": [
+        32,
+        0,
+        140,
+        140
+      ],
+      "parent": "torso",
+      "rest_offset": [
+        -13,
+        -242
+      ],
+      "z": 12
+    }
+  },
+  "motions": [
+    "idle_breathe",
+    "walk_slow",
+    "walk_normal",
+    "walk_confident",
+    "walk_sad",
+    "run_normal",
+    "run_panicked",
+    "start_walk",
+    "stop_sudden",
+    "step_back",
+    "shock_recoil"
+  ]
+}
