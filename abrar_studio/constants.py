@@ -2,11 +2,11 @@ from __future__ import annotations
 
 APP_NAME = "Abrar Studio"
 APP_ID = "com.abrar.studio"
-APP_VERSION = "3.0.3"
+APP_VERSION = "3.0.4"
 DEFAULT_WIDTH = 1280
 DEFAULT_HEIGHT = 720
 DEFAULT_FPS = 24
-GEMINI_FLASH_TTS = "gemini-2.5-flash-preview-tts"
+GEMINI_FLASH_TTS = "gemini-3.1-flash-tts-preview"
 GEMINI_PRO_TTS = "gemini-2.5-pro-preview-tts"
 VOICE_SEO_YEON = "Leda"
 VOICE_MIN_JUN = "Orus"

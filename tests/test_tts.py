@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from abrar_studio.gemini_tts import GeminiTTSClient, TTSGenerationError, TTSRequest, _extract_audio_base64, _score_wav
+from abrar_studio.constants import GEMINI_FLASH_TTS, GEMINI_PRO_TTS
 from abrar_studio.models import Shot
 from tests.common import make_project
 
@@ -22,14 +23,31 @@ class TTSTests(unittest.TestCase):
         er = GeminiTTSClient.build_request(char, emotional)
         self.assertEqual(nr.voice, "Leda")
         self.assertEqual(er.voice, "Leda")
-        self.assertIn("flash", nr.model)
-        self.assertIn("pro", er.model)
+        self.assertEqual(nr.model, "gemini-3.1-flash-tts-preview")
+        self.assertEqual(er.model, "gemini-2.5-pro-preview-tts")
+        self.assertEqual(nr.model, GEMINI_FLASH_TTS)
+        self.assertEqual(er.model, GEMINI_PRO_TTS)
         self.assertNotEqual(nr.cache_key, er.cache_key)
+        self.assertIn("Synthesize speech audio only", er.prompt)
         self.assertIn("natural contemporary Korean", er.prompt)
 
     def test_audio_response_parser(self):
         encoded = base64.b64encode(b"pcm").decode("ascii")
         self.assertEqual(_extract_audio_base64({"output_audio": {"data": encoded}}), encoded)
+
+    def test_audio_response_parser_supports_steps_schema(self):
+        encoded = base64.b64encode(b"new-schema-pcm").decode("ascii")
+        response = {
+            "steps": [
+                {
+                    "type": "model_output",
+                    "content": [
+                        {"type": "audio", "data": encoded, "mime_type": "audio/l16"},
+                    ],
+                },
+            ],
+        }
+        self.assertEqual(_extract_audio_base64(response), encoded)
 
     def test_wav_quality_scoring_rejects_silence(self):
         import tempfile, wave, math, struct

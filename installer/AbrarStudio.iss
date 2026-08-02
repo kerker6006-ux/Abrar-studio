@@ -1,6 +1,6 @@
 #define MyAppName "Abrar Studio"
 #ifndef MyAppVersion
-#define MyAppVersion "3.0.3"
+#define MyAppVersion "3.0.4"
 #endif
 #define MyAppPublisher "Abrar Studio"
 #define MyAppExeName "AbrarStudio.exe"
