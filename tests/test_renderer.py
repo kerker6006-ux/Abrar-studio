@@ -52,6 +52,27 @@ class RendererTests(unittest.TestCase):
             self.assertGreater(duration, 0.5)
             self.assertLess(duration, 1.2)
 
+    def test_complete_frame_walk_renders_at_720p(self):
+        temp, project = make_project()
+        self.addCleanup(temp.cleanup)
+        episode = Episode.from_dict({
+            "project_id": "abrar_studio", "episode_id": "WALK", "title": "walk",
+            "resolution": [1280, 720], "fps": 24,
+            "scenes": [{"id": "s", "title": "walk", "shots": [{
+                "id": "walk", "duration": 0.8, "background": "school_hallway_webtoon",
+                "camera": "pan_right", "music": "mystery",
+                "actors": [{
+                    "character_id": "min_jun", "pose": "full_side", "position": "left",
+                    "acting": "walk", "motion": "walk", "travel_x": 0.18,
+                    "ground_y": 0.96, "facing": "right"
+                }]
+            }]}]
+        })
+        out = project.render_dir / "walk.mp4"
+        AnimaticRenderer(project, shutil.which("ffmpeg") or "ffmpeg").render(episode, out)
+        self.assertTrue(out.exists())
+        self.assertGreater(out.stat().st_size, 1000)
+
 
 if __name__ == "__main__":
     unittest.main()

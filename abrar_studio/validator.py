@@ -8,6 +8,7 @@ from pathlib import Path
 from .constants import LOCKED_VOICE_PROFILES
 from .gemini_tts import GeminiTTSClient
 from .locks import verify_manifest
+from .limited_animation import inspect_sequence, sequence_name
 from .models import Episode
 from .project import StudioProject
 from .puppet import RigDefinition, normalize_motion, uses_articulated_motion
@@ -49,6 +50,7 @@ class QualityValidator:
         self._identity(episode, report)
         self._voices(episode, report, require_voices)
         self._rig_assets(episode, report)
+        self._visual_assets(episode, report)
         self._acting(episode, report)
         self._sound(episode, report)
         self._music(episode, report)
@@ -158,6 +160,51 @@ class QualityValidator:
                             missing.append(f"{speaker}:mouth {shape}")
         report.add("Pose, articulated motion and lip rig", not missing, "All approved pose, bone-rig, motion, gesture and five-shape mouth assets are available" if not missing else "Missing: " + ", ".join(sorted(set(missing))), 5)
 
+    def _visual_assets(self, episode: Episode, report: ValidationReport) -> None:
+        """Validate source artwork, not merely that a file happens to exist."""
+        from PIL import Image
+
+        problems: list[str] = []
+        inspected: set[tuple[str, str]] = set()
+        for scene in episode.scenes:
+            for shot in scene.shots:
+                if shot.background:
+                    background = self.project.assets_dir / "backgrounds" / shot.background
+                    if not background.exists():
+                        for suffix in (".png", ".jpg", ".jpeg", ".webp"):
+                            if background.with_suffix(suffix).exists():
+                                background = background.with_suffix(suffix)
+                                break
+                    if background.exists():
+                        try:
+                            with Image.open(background) as image:
+                                if image.width < episode.resolution[0] or image.height < episode.resolution[1]:
+                                    problems.append(f"{shot.id}: background is only {image.width}x{image.height}")
+                        except OSError:
+                            problems.append(f"{shot.id}: background is unreadable")
+                for actor in shot.actors:
+                    character = self.project.character(actor.character_id)
+                    root = self.project.character_manifest_path(actor.character_id).parent
+                    motion = normalize_motion(actor.motion, actor.acting)
+                    if motion.startswith(("walk", "run")):
+                        if character.visual_tier != "reference_limited_v1":
+                            problems.append(f"{actor.character_id}: locomotion still uses a legacy cutout pack")
+                        name = sequence_name(character, actor.motion, actor.acting)
+                        if not name:
+                            problems.append(f"{shot.id}:{actor.character_id}: complete-frame {motion} loop is missing")
+                        elif (actor.character_id, name) not in inspected:
+                            inspected.add((actor.character_id, name))
+                            for issue in inspect_sequence(root, character.animations[name]):
+                                problems.append(f"{actor.character_id}:{name}: {issue}")
+        unique = list(dict.fromkeys(problems))
+        report.add(
+            "Reference artwork and complete-frame motion",
+            not unique,
+            "Approved high-resolution artwork and complete-frame motion loops are ready"
+            if not unique else "Blocked: " + "; ".join(unique),
+            6,
+        )
+
     def _acting(self, episode: Episode, report: ValidationReport) -> None:
         weak: list[str] = []
         for scene in episode.scenes:
@@ -228,8 +275,25 @@ class QualityValidator:
         long_static = [shot.id for scene in episode.scenes for shot in scene.shots if shot.duration > 4 and shot.camera == "static"]
         hook_ok = bool(episode.scenes and episode.scenes[0].shots and episode.scenes[0].shots[0].duration <= 3.5)
         transitions = [shot.id for scene in episode.scenes for shot in scene.shots if shot.transition not in {"cut", "fade", "dip_black", "flash", "whip"}]
-        passed = hook_ok and not long_static and not transitions
-        detail = "Fast hook, controlled shot length and valid transitions" if passed else f"hook_ok={hook_ok}; long static={', '.join(long_static) or 'none'}; invalid transitions={', '.join(transitions) or 'none'}"
+        voice_overruns: list[str] = []
+        for scene in episode.scenes:
+            for shot in scene.shots:
+                speaker = shot.speaker_id
+                if not shot.dialogue or not speaker:
+                    continue
+                character = self.project.character(speaker)
+                request = GeminiTTSClient.build_request(character, shot)
+                voice = self.project.voice_cache_path(speaker, request.cache_key)
+                if voice.exists():
+                    try:
+                        with wave.open(str(voice), "rb") as wf:
+                            seconds = wf.getnframes() / max(1, wf.getframerate())
+                        if seconds + 0.35 > shot.duration + 0.08:
+                            voice_overruns.append(f"{shot.id} needs {seconds + 0.35:.1f}s (planned {shot.duration:.1f}s)")
+                    except wave.Error:
+                        pass
+        passed = hook_ok and not long_static and not transitions and not voice_overruns
+        detail = "Fast hook, controlled shot length, truthful voice timing and valid transitions" if passed else f"hook_ok={hook_ok}; long static={', '.join(long_static) or 'none'}; invalid transitions={', '.join(transitions) or 'none'}; voice timing={', '.join(voice_overruns) or 'ok'}"
         report.add("Pacing and transitions", passed, detail, 2)
 
     def _render_tool(self, report: ValidationReport) -> None:

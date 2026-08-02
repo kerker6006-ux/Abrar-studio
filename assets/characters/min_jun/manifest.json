@@ -29,6 +29,12 @@
     "audio_profile": "Korean man in his late twenties. Calm, low and controlled, protective without sounding old, with restrained emotion."
   },
   "asset_checksums": {
+    "animations/walk/frame_01.png": "06317225a8f11e28b93faae4ac7e1c6bbbd7fa96b2fe2d47895c5be225056380",
+    "animations/walk/frame_02.png": "077ec8a3511ac6b4e1406e077fc42b60018dd37674627c8d3519a9525627b6ce",
+    "animations/walk/frame_03.png": "079ebb8a0941d8ac2817bc4c33f93367f53d402c6d38f5fbec6b95d26ab46b67",
+    "animations/walk/frame_04.png": "ba37bfe9635435f697aa256ba01800c6194e2b273eaa60a7a0d2831b095bcad6",
+    "animations/walk/frame_05.png": "1100481b65ae9888d76730b2a21688569fe112f52d31dc8864bdbdf26c6626e4",
+    "animations/walk/frame_06.png": "352454ccf6bc13267c48c5426071d696fae95879af4f0d5aeeab0ad05bda24d9",
     "expressions/anger.png": "f8c1ab1d085dd2e3df73eddae2af7c1ba96def7c93c870764bd208b266a5651c",
     "expressions/breakdown.png": "3458e3d6024061ca331b80d5c63134517b943aa5cdfe22ee9ff8553bc9c8ad80",
     "expressions/embarrassed.png": "3195bfca22d707464f7c46d5408fd15e44bf60aa28da76ea447b6c8905eddd1f",
@@ -91,5 +97,21 @@
     "point": "gestures/point.png",
     "stop": "gestures/stop.png"
   },
-  "articulated_rig": "rig/rig.json"
+  "articulated_rig": "rig/rig.json",
+  "visual_tier": "reference_limited_v1",
+  "mouth_anchor": [0.579, 0.145],
+  "animations": {
+    "walk": {
+      "frames": [
+        "animations/walk/frame_01.png",
+        "animations/walk/frame_02.png",
+        "animations/walk/frame_03.png",
+        "animations/walk/frame_04.png",
+        "animations/walk/frame_05.png",
+        "animations/walk/frame_06.png"
+      ],
+      "fps": 6.0,
+      "loop": true
+    }
+  }
 }

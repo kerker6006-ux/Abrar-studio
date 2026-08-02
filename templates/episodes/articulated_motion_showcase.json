@@ -16,7 +16,7 @@
         {
           "id": "WALK_CONFIDENT",
           "duration": 2.8,
-          "background": "school_hallway_evening",
+          "background": "school_hallway_webtoon",
           "music": "school_tension",
           "ambience": "hallway_murmur",
           "camera": "tracking_push",
@@ -43,7 +43,7 @@
         {
           "id": "RUN_PANICKED",
           "duration": 2.4,
-          "background": "school_hallway_evening",
+          "background": "school_hallway_webtoon",
           "music": "chase_pulse",
           "ambience": "hallway_murmur",
           "camera": "tracking",
@@ -71,7 +71,7 @@
         {
           "id": "STOP_SUDDEN",
           "duration": 1.9,
-          "background": "school_hallway_evening",
+          "background": "school_hallway_webtoon",
           "music": "confrontation_rise",
           "ambience": "hallway_murmur",
           "camera": "push_in",

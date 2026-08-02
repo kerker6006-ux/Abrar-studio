@@ -1,11 +1,11 @@
 # Abrar Studio — complete project context for future AI chats
 
-> Read this file before changing the project. It is the canonical high-level handoff for Abrar Studio 3.0.5. After reading it, inspect the implementation files named in the module map before making technical claims or edits.
+> Read this file before changing the project. It is the canonical high-level handoff for Abrar Studio 3.1.0. After reading it, inspect the implementation files named in the module map before making technical claims or edits.
 
 ## 1. Project identity
 
 - **Product:** Abrar Studio
-- **Current source version:** 3.0.5
+- **Current source version:** 3.1.0
 - **Repository:** `kerker6006-ux/Abrar-studio`
 - **Platform:** local-first Windows desktop application
 - **Language/runtime:** Python 3.11+, Tkinter UI, Pillow image composition, FFmpeg rendering

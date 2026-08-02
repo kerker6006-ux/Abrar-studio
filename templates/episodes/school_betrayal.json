@@ -25,7 +25,7 @@
           "emotion": "suspicion",
           "emotion_level": 4,
           "camera": "push_in",
-          "background": "school_hallway_evening.png",
+          "background": "school_hallway_webtoon.png",
           "music": "betrayal_pulse.wav",
           "ambience": "hallway_murmur.wav",
           "sfx": [
@@ -60,7 +60,7 @@
           "emotion": "determination",
           "emotion_level": 3,
           "camera": "pan_left",
-          "background": "school_hallway_evening.png",
+          "background": "school_hallway_webtoon.png",
           "music": "school_tension.wav",
           "ambience": "hallway_murmur.wav",
           "sfx": [

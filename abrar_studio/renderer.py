@@ -16,6 +16,7 @@ from .acting import ActingPose, actor_pose
 from .alignment import alignment_at, build_alignment, load_alignment
 from .constants import POSITION_X
 from .gemini_tts import GeminiTTSClient
+from .limited_animation import frame_path as sequence_frame_path, sequence_name
 from .models import ActorCue, Episode, SFXCue, Shot
 from .project import StudioProject
 from .puppet import ArticulatedPuppetRenderer, footstep_times, normalize_motion, uses_articulated_motion
@@ -67,6 +68,9 @@ def _wrap(draw: ImageDraw.ImageDraw, text: str, font, max_width: int) -> list[st
 def _transparent_white(image: Image.Image) -> Image.Image:
     """Remove connected-looking light paper while preserving skin and clothing."""
     rgba = image.convert("RGBA")
+    alpha_min, _alpha_max = rgba.getchannel("A").getextrema()
+    if alpha_min < 255:
+        return rgba
     px = rgba.load()
     for y in range(rgba.height):
         for x in range(rgba.width):
@@ -136,11 +140,11 @@ def _text_mouth(text: str, frame: int, fps: int, duration: float) -> float:
 
 
 class AnimaticRenderer:
-    """Deterministic 720p Korean motion-webtoon renderer.
+    """Deterministic Korean limited-animation renderer.
 
-    V3 supports articulated side-view bone rigs, multi-character staging, audio-derived
-    Korean viseme timing, listener reactions, cinematic transitions, layered
-    ambience/music/SFX, subtitles and checksum-locked recurring artwork.
+    Approved complete-frame loops are preferred over articulated cutouts.  This keeps
+    anatomy and line work intact while still supporting basic walking, talking,
+    blinking, expression swaps, camera moves and layered sound on CPU-only PCs.
     """
 
     def __init__(self, project: StudioProject, ffmpeg_path: str = "ffmpeg", *, video_preset: str = "medium", crf: int = 17) -> None:
@@ -314,10 +318,34 @@ class AnimaticRenderer:
         char = self.project.character(cue.character_id)
         root = self.project.character_manifest_path(cue.character_id).parent
         close = cue.pose in {"portrait", "close", "closeup"} or cue.pose not in char.poses
-        articulated = bool(char.articulated_rig) and not close and uses_articulated_motion(cue.motion, cue.acting)
+        animation_name = None if close else sequence_name(char, cue.motion, cue.acting)
+        complete_frames = animation_name is not None
+        articulated = bool(char.articulated_rig) and not close and not complete_frames and uses_articulated_motion(cue.motion, cue.acting)
         speaking = cue.speaking and cue.character_id == shot.speaker_id
 
-        if articulated:
+        if complete_frames:
+            sequence = char.animations[animation_name]
+            asset_path = sequence_frame_path(root, sequence, t, cue.motion_speed, cue.cycle_offset)
+            if asset_path not in self._transparent_cache:
+                self._transparent_cache[asset_path] = _transparent_white(self._load(asset_path))
+            actor = self._transparent_cache[asset_path].copy()
+            if speaking and char.mouth_anchor and char.mouths:
+                shape = mouth_shape if mouth_shape in char.mouths else ("closed" if mouth_amp < 0.18 else "open")
+                patch = self._load(root / char.mouths[shape]).convert("RGBA")
+                alpha = patch.getchannel("A").point(lambda value: 0 if value < 72 else min(255, int((value - 72) * 1.4)))
+                patch.putalpha(alpha)
+                bbox = patch.getbbox()
+                if bbox:
+                    patch = patch.crop(bbox)
+                    desired_w = max(10, int(actor.width * (0.028 if shape == "closed" else 0.034)))
+                    ratio = desired_w / max(1, patch.width)
+                    patch = patch.resize((desired_w, max(2, int(patch.height * ratio))), Image.Resampling.LANCZOS)
+                    anchor_x, anchor_y = char.mouth_anchor
+                    actor.alpha_composite(patch, (int(actor.width * anchor_x - patch.width / 2), int(actor.height * anchor_y - patch.height / 2)))
+            visible = actor.getbbox()
+            if visible:
+                actor = actor.crop(visible)
+        elif articulated:
             motion = normalize_motion(cue.motion, cue.acting)
             facing = cue.facing.lower()
             if facing not in {"left", "right"}:
@@ -378,7 +406,9 @@ class AnimaticRenderer:
             canvas.alpha_composite(gesture, (gx, gy))
             actor = canvas
 
-        pose = ActingPose() if articulated else actor_pose(shot, cue, t, progress, index)
+        # Complete drawings are held cleanly.  Only tiny whole-body offsets are used;
+        # limbs are never independently rotated or warped.
+        pose = ActingPose() if (articulated or complete_frames) else actor_pose(shot, cue, t, progress, index)
         gaze_shift = {"left": -2.2, "right": 2.2, "down": 0.8, "away": -1.6}.get(cue.gaze, 0.0)
         actor = actor.resize((max(1, int(actor.width * pose.scale)), max(1, int(actor.height * pose.scale))), Image.Resampling.LANCZOS)
         actor = actor.rotate(pose.rotation + gaze_shift * 0.25, resample=Image.Resampling.BICUBIC, expand=True)
@@ -388,16 +418,20 @@ class AnimaticRenderer:
 
         x_ratio = POSITION_X.get(cue.position, 0.75)
         travel_ease = progress * progress * (3.0 - 2.0 * progress)
-        travel = cue.travel_x * width * travel_ease if articulated else 0.0
+        travel_amount = cue.travel_x
+        if complete_frames and abs(travel_amount) < 0.01:
+            facing = cue.facing.lower()
+            travel_amount = -0.14 if facing == "left" else 0.14
+        travel = travel_amount * width * travel_ease if (articulated or complete_frames) else 0.0
         x = int(width * x_ratio - actor.width / 2 + pose.dx + gaze_shift + travel)
-        ground_line = int(height * cue.ground_y) if articulated else height - 34
+        ground_line = int(height * cue.ground_y) if (articulated or complete_frames) else height - 34
         y = int(ground_line - actor.height + pose.dy)
 
         # Soft contact shadow anchors cutouts and follows the moving feet.
         shadow = Image.new("RGBA", scene.size, (0, 0, 0, 0))
         sd = ImageDraw.Draw(shadow, "RGBA")
-        shadow_w = max(45, int(actor.width * (0.46 if articulated else 0.58)))
-        shadow_h = 18 if articulated else 26
+        shadow_w = max(45, int(actor.width * (0.46 if (articulated or complete_frames) else 0.58)))
+        shadow_h = 18 if (articulated or complete_frames) else 26
         sd.ellipse((x + actor.width // 2 - shadow_w // 2, ground_line - shadow_h // 2,
                     x + actor.width // 2 + shadow_w // 2, ground_line + shadow_h // 2), fill=(0, 0, 0, 72))
         scene.alpha_composite(shadow)

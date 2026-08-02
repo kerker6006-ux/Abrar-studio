@@ -31,6 +31,20 @@ class ValidatorTests(unittest.TestCase):
         self.assertFalse(voice_gate.passed)
         self.assertIn("must remain Leda", voice_gate.detail)
 
+    def test_walk_requires_complete_reference_frames(self):
+        import json
+        temp, project = make_project()
+        self.addCleanup(temp.cleanup)
+        manifest_path = project.character_manifest_path("min_jun")
+        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        data["animations"] = {}
+        data["visual_tier"] = "legacy"
+        manifest_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        report = QualityValidator(project, shutil.which("ffmpeg") or "ffmpeg").validate(project.load_episode(), require_voices=False)
+        gate = next(item for item in report.results if item.gate == "Reference artwork and complete-frame motion")
+        self.assertFalse(gate.passed)
+        self.assertIn("complete-frame", gate.detail)
+
     def test_final_passes_with_valid_cached_wavs(self):
         temp, project = make_project()
         self.addCleanup(temp.cleanup)
