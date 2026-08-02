@@ -11,11 +11,14 @@ class IdentityLockError(RuntimeError):
 
 
 def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as fh:
-        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+    return sha256_locked_asset(path, "")
+
+
+def sha256_locked_asset(path: Path, rel: str) -> str:
+    data = path.read_bytes()
+    if rel.endswith(".json"):
+        data = data.replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
 
 
 def load_manifest(path: Path) -> CharacterManifest:
@@ -63,7 +66,7 @@ def calculate_manifest_checksums(manifest_path: Path) -> dict[str, str]:
         candidate = (base / rel).resolve()
         if not candidate.exists():
             raise IdentityLockError(f"Missing locked asset: {candidate}")
-        result[rel] = sha256_file(candidate)
+        result[rel] = sha256_locked_asset(candidate, rel)
     return result
 
 
