@@ -81,6 +81,11 @@ def write_report(path: Path, items: list[DiagnosticItem]) -> Path:
         updater_log = [_safe_text(line, 1200) for line in updater_log_path.read_text(encoding="utf-8-sig").splitlines()[-200:]]
     except OSError:
         updater_log = []
+    updater_launch_log_path = telemetry.events_path.parent / "updater-launch.log"
+    try:
+        updater_launch_log = [_safe_text(line, 1200) for line in updater_launch_log_path.read_text(encoding="utf-8-sig").splitlines()[-200:]]
+    except OSError:
+        updater_launch_log = []
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "passed": all(i.passed for i in items if i.name != "Secure key storage" or os.name == "nt"),
@@ -90,6 +95,7 @@ def write_report(path: Path, items: list[DiagnosticItem]) -> Path:
         "items": [asdict(i) for i in items],
         "recent_events": telemetry.recent_events(limit=300),
         "updater_log": updater_log,
+        "updater_launch_log": updater_launch_log,
         "privacy": "No API keys, scripts, dialogue, prompts, usernames, or media content are intentionally collected. Redacted local error descriptions and failing asset names may appear for troubleshooting.",
     }
     path.parent.mkdir(parents=True, exist_ok=True)

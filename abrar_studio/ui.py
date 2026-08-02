@@ -1144,10 +1144,16 @@ class StudioApp(tk.Tk):
                         self.settings_status.configure(text=f"Version {payload.version} is available", fg=PINK)
                         if messagebox.askyesno("Update available", f"Apply version {payload.version} and restart Abrar Studio?", parent=self):
                             updater = GitHubUpdater(self.settings.update_owner, self.settings.update_repo, APP_VERSION)
-                            self._run_task("update_install", lambda: updater.download_and_launch(payload))
+                            self._run_task("update_install", lambda: updater.prepare_update(payload))
                 elif event == "update_install:ok":
                     messagebox.showinfo("Update ready", "Abrar Studio will close, apply and verify the update, then reopen automatically.", parent=self)
-                    self.destroy()
+                    try:
+                        GitHubUpdater.launch_prepared(payload)
+                    except Exception as exc:
+                        self.settings_status.configure(text=f"Update launch failed: {exc}", fg=RED)
+                        messagebox.showerror("Update launch failed", str(exc), parent=self)
+                    else:
+                        self.destroy()
         except queue.Empty:
             pass
         self.after(120, self._poll_tasks)

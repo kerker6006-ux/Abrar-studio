@@ -9,7 +9,7 @@ import unittest
 import zipfile
 from pathlib import Path
 from unittest.mock import patch
-from abrar_studio.updater import GitHubUpdater, UpdateError, _UPDATE_SCRIPT
+from abrar_studio.updater import GitHubUpdater, PreparedUpdate, UpdateError, _UPDATE_SCRIPT
 
 
 class FakeResponse(io.BytesIO):
@@ -74,6 +74,45 @@ class UpdaterTests(unittest.TestCase):
             result_path.write_text(json.dumps({"status": "failed", "version": "3.0.3", "message": "test"}), encoding="utf-8")
             self.assertEqual(GitHubUpdater.consume_previous_result()["status"], "failed")
             self.assertIsNone(GitHubUpdater.consume_previous_result())
+
+    def test_prepared_updater_launch_is_checked_and_not_detached(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            prepared = PreparedUpdate(
+                version="3.0.5",
+                package=root / "update.zip",
+                script=root / "apply-update.ps1",
+                install_dir=root / "AbrarStudio",
+                executable_name="AbrarStudio.exe",
+                result_path=root / "update-result.json",
+                log_path=root / "updater.log",
+                launch_log_path=root / "updater-launch.log",
+                powershell=root / "powershell.exe",
+            )
+            process = unittest.mock.Mock()
+            process.poll.return_value = None
+            with patch("abrar_studio.updater.subprocess.Popen", return_value=process) as popen, patch("abrar_studio.updater.time.sleep"):
+                self.assertEqual(GitHubUpdater.launch_prepared(prepared), prepared.package)
+            flags = popen.call_args.kwargs["creationflags"]
+            self.assertFalse(flags & getattr(subprocess, "DETACHED_PROCESS", 0))
+            self.assertIn("Launching updater", prepared.launch_log_path.read_text(encoding="utf-8"))
+
+    def test_early_updater_exit_is_reported(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            prepared = PreparedUpdate(
+                version="3.0.5", package=root / "update.zip", script=root / "apply-update.ps1",
+                install_dir=root / "AbrarStudio", executable_name="AbrarStudio.exe",
+                result_path=root / "update-result.json", log_path=root / "updater.log",
+                launch_log_path=root / "updater-launch.log", powershell=root / "powershell.exe",
+            )
+            process = unittest.mock.Mock()
+            process.poll.return_value = 7
+            with patch("abrar_studio.updater.subprocess.Popen", return_value=process), patch("abrar_studio.updater.time.sleep"):
+                with self.assertRaisesRegex(UpdateError, "code 7"):
+                    GitHubUpdater.launch_prepared(prepared)
+            result = json.loads(prepared.result_path.read_text(encoding="utf-8"))
+            self.assertEqual(result["status"], "failed")
 
     @unittest.skipUnless(os.name == "nt", "PowerShell updater integration is Windows-only")
     def test_atomic_updater_preserves_installer_files_and_verifies_result(self):

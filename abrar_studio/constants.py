@@ -2,7 +2,7 @@ from __future__ import annotations
 
 APP_NAME = "Abrar Studio"
 APP_ID = "com.abrar.studio"
-APP_VERSION = "3.0.4"
+APP_VERSION = "3.0.5"
 DEFAULT_WIDTH = 1280
 DEFAULT_HEIGHT = 720
 DEFAULT_FPS = 24

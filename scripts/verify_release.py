@@ -126,7 +126,7 @@ def main() -> int:
             "secret_scan_clean": not leaked_secret_scan(),
         }
         result = {
-            "version": "3.0.4",
+            "version": "3.0.5",
             "checks": checks,
             "all_passed": all(checks.values()),
             "output": str(output),

@@ -1,4 +1,4 @@
-# Abrar Studio 3.0.4
+# Abrar Studio 3.0.5
 
 Abrar Studio is a local-first Windows application for Korean 2D cinematic motion-webtoon production. Version 3 adds an articulated side-view puppet engine so Seo-yeon and Min-jun can walk, run, stop, recoil and move across scenes with independently rotated limb segments, automatic footstep timing and tracking-camera travel.
 
@@ -21,7 +21,7 @@ These rig and motion files are installed once and remain on the PC. They are not
 
 ## Diagnostics and privacy
 
-Version 3.0.4 provides opt-in PostHog fleet health and Sentry crash reporting alongside the Diagnostics page, full local checks, recent redacted errors, workflow timing, device health and an exportable support report. It uses a random installation ID and sends only app/device metadata, operation names and timing, quality scores, privacy-filtered exception types and stack locations. API keys, dialogue, prompts, project paths, filenames, usernames and media are never intentionally sent. Sentry PII collection, local-variable capture and performance tracing are disabled.
+Version 3.0.5 provides opt-in PostHog fleet health and Sentry crash reporting alongside the Diagnostics page, full local checks, recent redacted errors, workflow timing, device health and an exportable support report. It uses a random installation ID and sends only app/device metadata, operation names and timing, quality scores, privacy-filtered exception types and stack locations. API keys, dialogue, prompts, project paths, filenames, usernames and media are never intentionally sent. Sentry PII collection, local-variable capture and performance tracing are disabled.
 
 Gemini TTS multi-take failures now retain the underlying provider response, so quota, permission, model and network failures can be diagnosed instead of appearing only as a generic error. Audio quality measurements reject silent, clipped or implausibly short takes and record privacy-safe quality metrics.
 
@@ -32,6 +32,8 @@ After the initial installation, Abrar Studio checks its GitHub release channel a
 Version 3.0.3 makes this replacement atomic: the existing installation is preserved until the staged executable is hash-verified, the directory swap succeeds, and the installed executable matches the staged hash. A failed update rolls back, writes a persistent updater log, shows the actual failure on the next launch, and suppresses an immediate repeat prompt.
 
 Version 3.0.4 routes normal dialogue to Gemini 3.1 Flash TTS, retains Gemini 2.5 Pro TTS for complex and emotional performances, and reads audio from Google's current Interactions `steps` response schema.
+
+Version 3.0.5 prepares updates before shutdown, launches the PowerShell helper from the UI thread without detached-process mode, verifies that the helper survived startup, and records early launch failures in the support report.
 
 ## Complete episode pipeline
 
