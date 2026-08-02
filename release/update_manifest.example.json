@@ -1,7 +1,9 @@
 {
-  "tag": "v3.0.0",
+  "tag": "v3.0.1",
   "assets": [
     "AbrarStudio-Setup.exe",
-    "AbrarStudio-Setup.exe.sha256"
+    "AbrarStudio-Setup.exe.sha256",
+    "AbrarStudio-Update.zip",
+    "AbrarStudio-Update.zip.sha256"
   ]
 }

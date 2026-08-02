@@ -856,7 +856,7 @@ class StudioApp(tk.Tk):
 
         updates = self._card(body, fill="x")
         tk.Label(updates, text="Automatic updates", bg=PANEL, fg=TEXT, font=("Segoe UI", 13, "bold")).grid(row=0, column=0, columnspan=3, sticky="w", padx=20, pady=(18, 5))
-        tk.Label(updates, text="Publish checksum-verified installers as GitHub Release assets with a matching SHA-256 file. The app verifies the checksum before launching an update.", bg=PANEL, fg=MUTED, wraplength=900, justify="left").grid(row=1, column=0, columnspan=3, sticky="w", padx=20, pady=(0, 10))
+        tk.Label(updates, text="Updates download from GitHub, pass SHA-256 verification, replace the installed app files, and restart automatically. Settings, credentials, projects and cached voices stay in your user folders.", bg=PANEL, fg=MUTED, wraplength=900, justify="left").grid(row=1, column=0, columnspan=3, sticky="w", padx=20, pady=(0, 10))
         tk.Label(updates, text="Owner", bg=PANEL, fg=MUTED).grid(row=2, column=0, sticky="w", padx=20, pady=6)
         self.update_owner_entry = tk.Entry(updates, bg="#0b1020", fg=TEXT, insertbackground=TEXT, relief="flat")
         self.update_owner_entry.insert(0, self.settings.update_owner)
@@ -1000,11 +1000,11 @@ class StudioApp(tk.Tk):
                         self.settings_status.configure(text="You are using the latest published version", fg=GREEN)
                     else:
                         self.settings_status.configure(text=f"Version {payload.version} is available", fg=PINK)
-                        if messagebox.askyesno("Update available", f"Download and install version {payload.version}?", parent=self):
+                        if messagebox.askyesno("Update available", f"Apply version {payload.version} and restart Abrar Studio?", parent=self):
                             updater = GitHubUpdater(self.settings.update_owner, self.settings.update_repo, APP_VERSION)
                             self._run_task("update_install", lambda: updater.download_and_launch(payload))
                 elif event == "update_install:ok":
-                    messagebox.showinfo("Update ready", "The verified installer has started. The app will close now.", parent=self)
+                    messagebox.showinfo("Update ready", "Abrar Studio will close, update itself, and reopen automatically.", parent=self)
                     self.destroy()
         except queue.Empty:
             pass

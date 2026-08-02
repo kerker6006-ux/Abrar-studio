@@ -2,7 +2,7 @@ from __future__ import annotations
 
 APP_NAME = "Abrar Studio"
 APP_ID = "com.abrar.studio"
-APP_VERSION = "3.0.0"
+APP_VERSION = "3.0.1"
 DEFAULT_WIDTH = 1280
 DEFAULT_HEIGHT = 720
 DEFAULT_FPS = 24
@@ -11,7 +11,7 @@ GEMINI_PRO_TTS = "gemini-2.5-pro-preview-tts"
 VOICE_SEO_YEON = "Leda"
 VOICE_MIN_JUN = "Orus"
 CREDENTIAL_TARGET = "AbrarStudio.GeminiAPIKey"
-UPDATE_ASSET_NAME = "AbrarStudio-Setup.exe"
+UPDATE_ASSET_NAME = "AbrarStudio-Update.zip"
 
 LOCKED_VOICE_PROFILES = {
     "seo_yeon": {

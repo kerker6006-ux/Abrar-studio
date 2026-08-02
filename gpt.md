@@ -1,11 +1,11 @@
 # Abrar Studio — complete project context for future AI chats
 
-> Read this file before changing the project. It is the canonical high-level handoff for Abrar Studio 3.0.0. After reading it, inspect the implementation files named in the module map before making technical claims or edits.
+> Read this file before changing the project. It is the canonical high-level handoff for Abrar Studio 3.0.1. After reading it, inspect the implementation files named in the module map before making technical claims or edits.
 
 ## 1. Project identity
 
 - **Product:** Abrar Studio
-- **Current source version:** 3.0.0
+- **Current source version:** 3.0.1
 - **Repository:** `kerker6006-ux/Abrar-studio`
 - **Platform:** local-first Windows desktop application
 - **Language/runtime:** Python 3.11+, Tkinter UI, Pillow image composition, FFmpeg rendering
@@ -400,7 +400,7 @@ Voice WAVs, alignment JSON, settings, and credentials are local data and should 
 - On non-Windows development systems, `GEMINI_API_KEY` may be read from the environment, but the application does not persist it.
 - Character ZIP imports reject path traversal and require exactly one valid manifest.
 - Guest characters require lowercase IDs, locked identity and voice, required mouth shapes, expressions, poses, and valid checksums.
-- Updates require both `AbrarStudio-Setup.exe` and `AbrarStudio-Setup.exe.sha256`; the digest is verified before launching the installer.
+- In-place updates require `AbrarStudio-Update.zip` and `AbrarStudio-Update.zip.sha256`; the digest and archive paths are verified before an external helper replaces program files and restarts the app.
 - Publicly exposed API keys must be revoked and replaced.
 - Code signing is recommended for public Windows distribution.
 
@@ -460,11 +460,11 @@ The repository workflow at `.github/workflows/windows-release.yml` is intended t
 3. read `APP_VERSION`;
 4. install Inno Setup;
 5. build and verify three times;
-6. upload the installer, checksum, and verification reports;
+6. upload the installer, in-place update package, checksums, and verification reports;
 7. create or update a `v<version>` GitHub Release;
-8. upload `AbrarStudio-Setup.exe` and its SHA-256 file.
+8. upload the installer pair plus `AbrarStudio-Update.zip` and its SHA-256 file.
 
-The app’s updater checks the repository’s latest release, requires both files, verifies SHA-256, and silently launches the installer.
+The app’s updater checks the repository’s latest release, verifies the update ZIP and SHA-256 file, closes the running app, replaces installed program files, and reopens automatically. Settings, encrypted credentials, projects, renders and cached voices are stored outside the installation directory and remain untouched.
 
 ## 18. Source module map
 

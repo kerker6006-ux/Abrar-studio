@@ -1,4 +1,4 @@
-# Abrar Studio 3.0.0
+# Abrar Studio 3.0.1
 
 Abrar Studio is a local-first Windows application for Korean 2D cinematic motion-webtoon production. Version 3 adds an articulated side-view puppet engine so Seo-yeon and Min-jun can walk, run, stop, recoil and move across scenes with independently rotated limb segments, automatic footstep timing and tracking-camera travel.
 
@@ -18,6 +18,10 @@ The two locked lead characters include local, reusable articulated rigs with:
 - two-person locomotion with staggered footsteps
 
 These rig and motion files are installed once and remain on the PC. They are not downloaded for each video.
+
+## Automatic updates
+
+After the initial installation, Abrar Studio checks its GitHub release channel at startup. A newer release is downloaded as a checksum-verified update package; the app closes, replaces its program files, and reopens automatically. User settings, encrypted credentials, projects, renders and cached voices are preserved, so future versions do not require reinstalling.
 
 ## Complete episode pipeline
 

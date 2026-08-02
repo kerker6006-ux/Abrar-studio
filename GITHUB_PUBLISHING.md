@@ -11,4 +11,4 @@ The repository contains the complete, directly browsable source tree, including:
 - `VERIFICATION_REPORT.md`
 - `README.md` and `gpt.md`
 
-A push to `main` builds directly from the checked-out source, verifies `AbrarStudio-Setup.exe`, publishes a GitHub Release, and activates the app’s default update channel.
+A push to `main` builds directly from the checked-out source, verifies the installer and in-place update ZIP, publishes a GitHub Release, and activates the app’s default update channel. The installer is for first-time setup; version 3.0.1 and later update their program files and restart without reinstalling.
