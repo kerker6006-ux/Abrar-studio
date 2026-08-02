@@ -7,6 +7,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.error
 import urllib.request
 import zipfile
@@ -22,6 +23,7 @@ UPDATE_CHECKSUM_NAME = f"{UPDATE_PACKAGE_NAME}.sha256"
 UPDATE_EXECUTABLE_NAME = "AbrarStudio.exe"
 UPDATE_RESULT_NAME = "update-result.json"
 UPDATE_LOG_NAME = "updater.log"
+UPDATE_LAUNCH_LOG_NAME = "updater-launch.log"
 
 
 class UpdateError(RuntimeError):
@@ -34,6 +36,19 @@ class ReleaseInfo:
     package_url: str
     checksum_url: str
     notes: str = ""
+
+
+@dataclass(slots=True)
+class PreparedUpdate:
+    version: str
+    package: Path
+    script: Path
+    install_dir: Path
+    executable_name: str
+    result_path: Path
+    log_path: Path
+    launch_log_path: Path
+    powershell: Path
 
 
 class GitHubUpdater:
@@ -66,7 +81,7 @@ class GitHubUpdater:
             raise UpdateError("Latest release is missing the in-place update package or SHA-256 file")
         return ReleaseInfo(tag, package, checksum, str(data.get("body", "")))
 
-    def download_and_launch(self, release: ReleaseInfo) -> Path:
+    def prepare_update(self, release: ReleaseInfo) -> PreparedUpdate:
         if os.name != "nt" or not getattr(sys, "frozen", False):
             raise UpdateError("Automatic in-place updates are available in the installed Windows app")
 
@@ -95,24 +110,71 @@ class GitHubUpdater:
         diagnostics.mkdir(parents=True, exist_ok=True)
         result_path = diagnostics / UPDATE_RESULT_NAME
         log_path = diagnostics / UPDATE_LOG_NAME
+        launch_log_path = diagnostics / UPDATE_LAUNCH_LOG_NAME
         result_path.unlink(missing_ok=True)
         powershell = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32" / "WindowsPowerShell" / "v1.0" / "powershell.exe"
         if not powershell.exists():
             raise UpdateError("Windows PowerShell was not found")
 
-        creation_flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "DETACHED_PROCESS", 0)
-        subprocess.Popen(
-            [
-                str(powershell), "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
-                "-File", str(script), "-ProcessId", str(os.getpid()), "-PackagePath", str(package),
-                "-InstallDir", str(install_dir), "-ExecutableName", UPDATE_EXECUTABLE_NAME,
-                "-ResultPath", str(result_path), "-LogPath", str(log_path),
-                "-ExpectedVersion", release.version,
-            ],
-            close_fds=True,
-            creationflags=creation_flags,
+        return PreparedUpdate(
+            version=release.version,
+            package=package,
+            script=script,
+            install_dir=install_dir,
+            executable_name=UPDATE_EXECUTABLE_NAME,
+            result_path=result_path,
+            log_path=log_path,
+            launch_log_path=launch_log_path,
+            powershell=powershell,
         )
-        return package
+
+    @staticmethod
+    def launch_prepared(prepared: PreparedUpdate) -> Path:
+        """Start the updater after preparation and prove it survived startup.
+
+        A normal hidden child process remains alive after the GUI exits on Windows;
+        DETACHED_PROCESS is intentionally avoided because it can be silently blocked
+        on managed PCs before PowerShell reaches the script's own logging.
+        """
+        command = [
+            str(prepared.powershell), "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+            "-File", str(prepared.script), "-ProcessId", str(os.getpid()),
+            "-PackagePath", str(prepared.package), "-InstallDir", str(prepared.install_dir),
+            "-ExecutableName", prepared.executable_name, "-ResultPath", str(prepared.result_path),
+            "-LogPath", str(prepared.log_path), "-ExpectedVersion", prepared.version,
+        ]
+        prepared.launch_log_path.parent.mkdir(parents=True, exist_ok=True)
+        stamp = time.strftime("%Y-%m-%dT%H:%M:%S%z")
+        with prepared.launch_log_path.open("ab", buffering=0) as launch_log:
+            launch_log.write(f"{stamp} Launching updater for {prepared.version}\r\n".encode("utf-8"))
+            try:
+                process = subprocess.Popen(
+                    command,
+                    stdout=launch_log,
+                    stderr=subprocess.STDOUT,
+                    close_fds=True,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+                )
+            except OSError as exc:
+                GitHubUpdater._record_launch_failure(prepared, f"Could not start update helper: {exc}")
+                raise UpdateError(f"Could not start update helper: {exc}") from exc
+            time.sleep(0.75)
+            exit_code = process.poll()
+        if exit_code is not None:
+            message = f"Update helper exited during startup with code {exit_code}"
+            GitHubUpdater._record_launch_failure(prepared, message)
+            raise UpdateError(message)
+        return prepared.package
+
+    @staticmethod
+    def _record_launch_failure(prepared: PreparedUpdate, message: str) -> None:
+        prepared.result_path.parent.mkdir(parents=True, exist_ok=True)
+        prepared.result_path.write_text(json.dumps({
+            "status": "failed",
+            "version": prepared.version,
+            "message": message,
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        }, indent=2), encoding="utf-8")
 
     @staticmethod
     def consume_previous_result() -> dict[str, str] | None:
