@@ -187,6 +187,18 @@ function Write-UpdateResult([string]$Status, [string]$Message) {
         ConvertTo-Json | Set-Content -LiteralPath $ResultPath -Encoding UTF8
 }
 
+function Get-SHA256([string]$Path) {
+    $stream = [IO.File]::OpenRead($Path)
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try {
+        return ([BitConverter]::ToString($sha.ComputeHash($stream))).Replace("-", "")
+    }
+    finally {
+        $sha.Dispose()
+        $stream.Dispose()
+    }
+}
+
 try {
     Write-UpdateLog "Starting update to $ExpectedVersion from package $PackagePath"
     $deadline = (Get-Date).AddSeconds(120)
@@ -213,7 +225,7 @@ try {
         throw "The staged update does not contain $ExecutableName"
     }
 
-    $expectedHash = (Get-FileHash -LiteralPath $stagedExe -Algorithm SHA256).Hash
+    $expectedHash = Get-SHA256 $stagedExe
     Move-Item -LiteralPath $installPath -Destination $backup -Force -ErrorAction Stop
     $oldMoved = $true
     try {
@@ -226,7 +238,7 @@ try {
     }
 
     $installedExe = Join-Path $installPath $ExecutableName
-    $installedHash = (Get-FileHash -LiteralPath $installedExe -Algorithm SHA256).Hash
+    $installedHash = Get-SHA256 $installedExe
     if ($installedHash -ne $expectedHash) { throw "Installed executable verification failed" }
     Write-UpdateLog "Update to $ExpectedVersion installed and hash verified"
     Write-UpdateResult "success" "Abrar Studio $ExpectedVersion installed successfully"
