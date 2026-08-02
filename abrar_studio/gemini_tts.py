@@ -16,6 +16,7 @@ from typing import Any
 
 from .models import CharacterManifest, Shot
 from .constants import GEMINI_FLASH_TTS, VOICE_SEO_YEON
+from .telemetry import telemetry
 
 
 class TTSGenerationError(RuntimeError):
@@ -130,6 +131,7 @@ class GeminiTTSClient:
         """
         takes = max(1, min(4, int(takes)))
         candidates: list[tuple[float, Path, dict[str, float]]] = []
+        errors: list[str] = []
         output_path.parent.mkdir(parents=True, exist_ok=True)
         for index in range(1, takes + 1):
             temp = output_path.with_name(f".{output_path.stem}.take{index}.wav")
@@ -145,14 +147,27 @@ class GeminiTTSClient:
                     break
                 except TTSGenerationError as exc:
                     last_error = exc
+                    errors.append(f"take {index}, attempt {attempt + 1}: {exc}")
                     if attempt == 0:
                         time.sleep(1.0)
             if last_error:
                 continue
             metrics = _score_wav(temp, len(request_data.prompt))
+            if metrics["score"] < 20 or metrics["duration"] < 0.35:
+                errors.append(f"take {index}: audio quality validation failed (score {metrics['score']}, duration {metrics['duration']}s)")
+                telemetry.capture("abrar_tts_quality", {
+                    "model": request_data.model,
+                    "voice": request_data.voice,
+                    "accepted": False,
+                    **metrics,
+                })
+                temp.unlink(missing_ok=True)
+                continue
             candidates.append((metrics["score"], temp, metrics))
         if not candidates:
-            raise TTSGenerationError("All Gemini TTS performance takes failed")
+            unique_errors = list(dict.fromkeys(errors))
+            detail = " | ".join(unique_errors[-6:])
+            raise TTSGenerationError(f"All Gemini TTS performance takes failed. {detail}" if detail else "All Gemini TTS performance takes failed")
         candidates.sort(key=lambda item: item[0], reverse=True)
         score, winner, metrics = candidates[0]
         os.replace(winner, output_path)
@@ -163,6 +178,13 @@ class GeminiTTSClient:
             "model": request_data.model, "voice": request_data.voice, "takes": takes,
             "selected_score": score, "selected_metrics": metrics,
         }, indent=2), encoding="utf-8")
+        telemetry.capture("abrar_tts_quality", {
+            "model": request_data.model,
+            "voice": request_data.voice,
+            "takes": takes,
+            "accepted": True,
+            **metrics,
+        })
         return output_path
 
 

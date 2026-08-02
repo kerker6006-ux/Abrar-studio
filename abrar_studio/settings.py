@@ -13,6 +13,8 @@ class AppSettings:
     update_repo: str = "Abrar-studio"
     auto_check_updates: bool = True
     project_path: str = ""
+    telemetry_enabled: bool = False
+    telemetry_consent_shown: bool = False
 
 
 class SettingsStore:

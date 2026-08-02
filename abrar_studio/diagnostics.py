@@ -6,6 +6,7 @@ import platform
 import shutil
 import sys
 import tempfile
+from datetime import datetime, timezone
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from .models import Episode
 from .paths import app_root
 from .project import StudioProject
 from .puppet import ArticulatedPuppetRenderer, RigDefinition
+from .telemetry import system_profile, telemetry
 
 
 @dataclass(slots=True)
@@ -41,7 +43,7 @@ def run_diagnostics(project: StudioProject | None = None, ffmpeg_path: str = "ff
         probe = project.root / ".diagnostic-write-test"
         probe.write_text("ok", encoding="utf-8")
         probe.unlink()
-        items.append(DiagnosticItem("Project folder writable", True, str(project.root)))
+        items.append(DiagnosticItem("Project folder writable", True, "write test passed"))
     except Exception as exc:
         items.append(DiagnosticItem("Project folder writable", False, str(exc)))
         return items
@@ -75,9 +77,14 @@ def run_diagnostics(project: StudioProject | None = None, ffmpeg_path: str = "ff
 
 def write_report(path: Path, items: list[DiagnosticItem]) -> Path:
     payload = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "passed": all(i.passed for i in items if i.name != "Secure key storage" or os.name == "nt"),
-        "platform": platform.platform(),
+        "device": system_profile(include_gpu=True),
+        "anonymous_installation_id": telemetry.installation_id,
+        "anonymous_sharing_enabled": telemetry.enabled,
         "items": [asdict(i) for i in items],
+        "recent_events": telemetry.recent_events(limit=300),
+        "privacy": "No API keys, scripts, dialogue, prompts, usernames, or media content are intentionally collected. Redacted local error descriptions and failing asset names may appear for troubleshooting.",
     }
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")

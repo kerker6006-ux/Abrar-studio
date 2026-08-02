@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import base64
+import tempfile
 import unittest
-from abrar_studio.gemini_tts import GeminiTTSClient, _extract_audio_base64, _score_wav
+from pathlib import Path
+from unittest.mock import patch
+
+from abrar_studio.gemini_tts import GeminiTTSClient, TTSGenerationError, TTSRequest, _extract_audio_base64, _score_wav
 from abrar_studio.models import Shot
 from tests.common import make_project
 
@@ -39,6 +43,14 @@ class TTSTests(unittest.TestCase):
             with wave.open(str(voice), "wb") as wf:
                 wf.setnchannels(1); wf.setsampwidth(2); wf.setframerate(24000); wf.writeframes(frames)
             self.assertGreater(_score_wav(voice)["score"], _score_wav(silent)["score"])
+
+    def test_all_take_failures_keep_the_provider_reason(self):
+        request = TTSRequest(model="test-model", voice="Leda", prompt="test", cache_key="test")
+        with tempfile.TemporaryDirectory() as td:
+            client = GeminiTTSClient("test-key")
+            with patch.object(client, "generate", side_effect=TTSGenerationError("HTTP 429: quota exhausted")), patch("abrar_studio.gemini_tts.time.sleep"):
+                with self.assertRaisesRegex(TTSGenerationError, "HTTP 429: quota exhausted"):
+                    client.generate_best(request, Path(td) / "voice.wav", takes=2)
 
 
 if __name__ == "__main__":
