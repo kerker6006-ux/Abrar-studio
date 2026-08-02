@@ -16,7 +16,7 @@ from .models import Episode
 from .paths import app_root
 from .project import StudioProject
 from .puppet import ArticulatedPuppetRenderer, RigDefinition
-from .telemetry import system_profile, telemetry
+from .telemetry import _safe_text, system_profile, telemetry
 
 
 @dataclass(slots=True)
@@ -76,6 +76,11 @@ def run_diagnostics(project: StudioProject | None = None, ffmpeg_path: str = "ff
 
 
 def write_report(path: Path, items: list[DiagnosticItem]) -> Path:
+    updater_log_path = telemetry.events_path.parent / "updater.log"
+    try:
+        updater_log = [_safe_text(line, 1200) for line in updater_log_path.read_text(encoding="utf-8-sig").splitlines()[-200:]]
+    except OSError:
+        updater_log = []
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "passed": all(i.passed for i in items if i.name != "Secure key storage" or os.name == "nt"),
@@ -84,6 +89,7 @@ def write_report(path: Path, items: list[DiagnosticItem]) -> Path:
         "anonymous_sharing_enabled": telemetry.enabled,
         "items": [asdict(i) for i in items],
         "recent_events": telemetry.recent_events(limit=300),
+        "updater_log": updater_log,
         "privacy": "No API keys, scripts, dialogue, prompts, usernames, or media content are intentionally collected. Redacted local error descriptions and failing asset names may appear for troubleshooting.",
     }
     path.parent.mkdir(parents=True, exist_ok=True)

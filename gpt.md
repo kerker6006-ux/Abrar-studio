@@ -1,11 +1,11 @@
 # Abrar Studio — complete project context for future AI chats
 
-> Read this file before changing the project. It is the canonical high-level handoff for Abrar Studio 3.0.2. After reading it, inspect the implementation files named in the module map before making technical claims or edits.
+> Read this file before changing the project. It is the canonical high-level handoff for Abrar Studio 3.0.3. After reading it, inspect the implementation files named in the module map before making technical claims or edits.
 
 ## 1. Project identity
 
 - **Product:** Abrar Studio
-- **Current source version:** 3.0.2
+- **Current source version:** 3.0.3
 - **Repository:** `kerker6006-ux/Abrar-studio`
 - **Platform:** local-first Windows desktop application
 - **Language/runtime:** Python 3.11+, Tkinter UI, Pillow image composition, FFmpeg rendering
@@ -465,7 +465,7 @@ The repository workflow at `.github/workflows/windows-release.yml` is intended t
 7. create or update a `v<version>` GitHub Release;
 8. upload the installer pair plus `AbrarStudio-Update.zip` and its SHA-256 file.
 
-The app’s updater checks the repository’s latest release, verifies the update ZIP and SHA-256 file, closes the running app, replaces installed program files, and reopens automatically. Settings, encrypted credentials, projects, renders and cached voices are stored outside the installation directory and remain untouched.
+The app’s updater checks the repository’s latest release, verifies the update ZIP and SHA-256 file, closes the running app, builds a staged copy beside the installation, preserves installer metadata, atomically swaps directories, verifies the installed executable hash, and reopens automatically. Failure rolls back to the previous installation, persists `updater.log` and `update-result.json`, and suppresses an immediate repeat prompt. Settings, encrypted credentials, projects, renders and cached voices are stored outside the installation directory and remain untouched.
 
 ## 18. Source module map
 
@@ -487,6 +487,7 @@ The app’s updater checks the repository’s latest release, verifies the updat
 - `abrar_studio/updater.py` — GitHub release update/checksum flow
 - `abrar_studio/diagnostics.py` — Python, FFmpeg, project, identity, rig, schema, and security diagnostics
 - `abrar_studio/telemetry.py` — opt-in PostHog events, anonymous installation identity, privacy filtering, and capped local history
+- `abrar_studio/monitoring.py` — consent-gated Sentry initialization, exception capture, release tags, and PII/source-context filtering
 - `assets/` — all bundled characters and media
 - `templates/episodes/` — ready-to-edit production examples
 - `tests/` — unit and smoke tests

@@ -23,6 +23,7 @@ from .diagnostics import run_diagnostics, write_report
 from .gemini_tts import GeminiTTSClient, TTSGenerationError
 from .alignment import build_alignment
 from .models import ActorCue, Episode, ModelError, SFXCue, Scene, Shot
+from .monitoring import configure_sentry, flush as flush_sentry
 from .paths import app_root
 from .project import StudioProject
 from .renderer import AnimaticRenderer, RenderError
@@ -54,7 +55,9 @@ class StudioApp(tk.Tk):
         self.configure(bg=BG)
         self.settings_store = SettingsStore()
         self.settings = self.settings_store.load()
+        self._previous_update_result = GitHubUpdater.consume_previous_result()
         telemetry.configure(self.settings.telemetry_enabled)
+        configure_sentry(self.settings.telemetry_enabled)
         bundled_ffmpeg = app_root() / "tools" / ("ffmpeg.exe" if __import__("os").name == "nt" else "ffmpeg")
         if self.settings.ffmpeg_path == "ffmpeg" and bundled_ffmpeg.exists():
             self.settings.ffmpeg_path = str(bundled_ffmpeg)
@@ -70,12 +73,14 @@ class StudioApp(tk.Tk):
         self._build_shell()
         self._show_page("Dashboard")
         self.after(120, self._poll_tasks)
+        self.after(900, self._show_previous_update_result)
         self.protocol("WM_DELETE_WINDOW", self._close_app)
         if not self.settings.telemetry_consent_shown:
             self.after(700, self._ask_telemetry_consent)
         else:
             telemetry.capture("abrar_app_opened", system_profile())
-        if self.settings.auto_check_updates and self.settings.update_owner and self.settings.update_repo:
+        previous_update_failed = bool(self._previous_update_result and self._previous_update_result.get("status") == "failed")
+        if self.settings.auto_check_updates and self.settings.update_owner and self.settings.update_repo and not previous_update_failed:
             self.after(2500, self._auto_update_check)
 
     def _load_project(self) -> StudioProject:
@@ -882,7 +887,7 @@ class StudioApp(tk.Tk):
 
         privacy = self._card(body, fill="x", pady=(0, 14))
         tk.Label(privacy, text="Anonymous diagnostics", bg=PANEL, fg=TEXT, font=("Segoe UI", 13, "bold")).pack(anchor="w", padx=20, pady=(18, 5))
-        tk.Label(privacy, text="Share device type, app version, operation timing, quality scores and redacted errors. API keys, dialogue, prompts, projects, filenames, usernames and videos are never sent.", bg=PANEL, fg=MUTED, wraplength=900, justify="left").pack(anchor="w", padx=20)
+        tk.Label(privacy, text="Share device type, app version, operation timing and quality through PostHog, plus privacy-filtered crashes through Sentry. API keys, dialogue, prompts, projects, filenames, usernames and videos are never intentionally sent.", bg=PANEL, fg=MUTED, wraplength=900, justify="left").pack(anchor="w", padx=20)
         self.telemetry_var = tk.BooleanVar(value=self.settings.telemetry_enabled)
         tk.Checkbutton(privacy, text="Help improve Abrar Studio with anonymous diagnostics", variable=self.telemetry_var, bg=PANEL, fg=TEXT, selectcolor="#0b1020", activebackground=PANEL, activeforeground=TEXT).pack(anchor="w", padx=20, pady=(10, 18))
 
@@ -953,6 +958,7 @@ class StudioApp(tk.Tk):
         self.settings.telemetry_consent_shown = True
         self.settings_store.save(self.settings)
         telemetry.configure(self.settings.telemetry_enabled)
+        configure_sentry(self.settings.telemetry_enabled)
         self.settings_status.configure(text="Settings saved", fg=GREEN)
 
     # Diagnostics
@@ -973,7 +979,8 @@ class StudioApp(tk.Tk):
 
     def _refresh_diagnostics(self) -> None:
         sharing = "ON" if telemetry.enabled else "OFF"
-        self.diagnostics_status.configure(text=f"Anonymous sharing: {sharing}  •  Installation ID: {telemetry.installation_id[:8]}…", fg=GREEN if telemetry.enabled else MUTED)
+        services = "PostHog + Sentry" if telemetry.enabled else "local logs only"
+        self.diagnostics_status.configure(text=f"Anonymous sharing: {sharing} ({services})  •  Installation ID: {telemetry.installation_id[:8]}…", fg=GREEN if telemetry.enabled else MUTED)
         events = telemetry.recent_events(limit=100)
         self.diagnostics_text.delete("1.0", "end")
         if not events:
@@ -1005,19 +1012,21 @@ class StudioApp(tk.Tk):
     def _ask_telemetry_consent(self) -> None:
         enabled = messagebox.askyesno(
             "Help improve Abrar Studio?",
-            "Share anonymous device specifications, operation timing, quality scores and redacted errors?\n\nAPI keys, dialogue, prompts, project files, filenames, usernames and videos are never sent. You can change this in Settings.",
+            "Share anonymous device specifications, operation timing and quality through PostHog, plus privacy-filtered crashes through Sentry?\n\nAPI keys, dialogue, prompts, project files, filenames, usernames and videos are never intentionally sent. You can change this in Settings.",
             parent=self,
         )
         self.settings.telemetry_consent_shown = True
         self.settings.telemetry_enabled = enabled
         self.settings_store.save(self.settings)
         telemetry.configure(enabled)
+        configure_sentry(enabled)
         if hasattr(self, "telemetry_var"):
             self.telemetry_var.set(enabled)
         telemetry.capture("abrar_app_opened", system_profile())
 
     def _close_app(self) -> None:
         telemetry.capture("abrar_app_closed")
+        flush_sentry()
         self.destroy()
 
     def _auto_update_check(self) -> None:
@@ -1027,6 +1036,19 @@ class StudioApp(tk.Tk):
         except Exception:
             # Startup checks are silent; the manual Settings action shows errors.
             return
+
+    def _show_previous_update_result(self) -> None:
+        result = self._previous_update_result
+        if not result:
+            return
+        if result.get("status") == "success":
+            messagebox.showinfo("Update complete", result.get("message", "Abrar Studio was updated successfully."), parent=self)
+        else:
+            messagebox.showerror(
+                "Update failed",
+                f"Abrar Studio restored the previous version.\n\n{result.get('message', 'Unknown updater error')}\n\nOpen Diagnostics and export a support report for help.",
+                parent=self,
+            )
 
     def _check_update(self) -> None:
         self._save_settings()
@@ -1124,7 +1146,7 @@ class StudioApp(tk.Tk):
                             updater = GitHubUpdater(self.settings.update_owner, self.settings.update_repo, APP_VERSION)
                             self._run_task("update_install", lambda: updater.download_and_launch(payload))
                 elif event == "update_install:ok":
-                    messagebox.showinfo("Update ready", "Abrar Studio will close, update itself, and reopen automatically.", parent=self)
+                    messagebox.showinfo("Update ready", "Abrar Studio will close, apply and verify the update, then reopen automatically.", parent=self)
                     self.destroy()
         except queue.Empty:
             pass

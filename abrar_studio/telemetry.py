@@ -214,6 +214,12 @@ class TelemetryRecorder:
         if duration_seconds is not None:
             remote["duration_seconds"] = round(duration_seconds, 3)
         self.capture("abrar_error", properties, remote_properties=remote)
+        try:
+            from .monitoring import capture_exception as capture_sentry_exception
+
+            capture_sentry_exception(exc, operation)
+        except Exception:
+            pass
 
     def recent_events(self, limit: int = 300) -> list[dict[str, Any]]:
         try:
