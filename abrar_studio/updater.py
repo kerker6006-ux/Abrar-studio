@@ -243,6 +243,10 @@ catch {
         $oldMoved = $false
     }
     Write-UpdateResult "failed" $failure
+    if ($SkipRestart) {
+        [Console]::Error.WriteLine("Updater integration failure: " + $failure)
+        exit 1
+    }
 }
 finally {
     Remove-Item -LiteralPath $payload -Recurse -Force -ErrorAction SilentlyContinue
