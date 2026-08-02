@@ -1,11 +1,11 @@
 # Abrar Studio — complete project context for future AI chats
 
-> Read this file before changing the project. It is the canonical high-level handoff for Abrar Studio 3.0.1. After reading it, inspect the implementation files named in the module map before making technical claims or edits.
+> Read this file before changing the project. It is the canonical high-level handoff for Abrar Studio 3.0.2. After reading it, inspect the implementation files named in the module map before making technical claims or edits.
 
 ## 1. Project identity
 
 - **Product:** Abrar Studio
-- **Current source version:** 3.0.1
+- **Current source version:** 3.0.2
 - **Repository:** `kerker6006-ux/Abrar-studio`
 - **Platform:** local-first Windows desktop application
 - **Language/runtime:** Python 3.11+, Tkinter UI, Pillow image composition, FFmpeg rendering
@@ -375,6 +375,7 @@ The Tkinter application window is defined in `abrar_studio/ui.py`. It provides t
 - **Voice Studio:** character voice profile and preview generation
 - **Production:** bulk voice generation and episode rendering
 - **Quality Check:** validation gates and report display
+- **Diagnostics:** device health, redacted local event history, full checks, and support-report export
 - **Settings:** secure Gemini key controls, connection test, FFmpeg path, project folder, and updater settings
 
 Long-running work runs in background tasks and reports progress to the UI queue.
@@ -485,6 +486,7 @@ The app’s updater checks the repository’s latest release, verifies the updat
 - `abrar_studio/settings.py` — local application settings
 - `abrar_studio/updater.py` — GitHub release update/checksum flow
 - `abrar_studio/diagnostics.py` — Python, FFmpeg, project, identity, rig, schema, and security diagnostics
+- `abrar_studio/telemetry.py` — opt-in PostHog events, anonymous installation identity, privacy filtering, and capped local history
 - `assets/` — all bundled characters and media
 - `templates/episodes/` — ready-to-edit production examples
 - `tests/` — unit and smoke tests

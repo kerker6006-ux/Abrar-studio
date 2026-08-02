@@ -1,4 +1,4 @@
-# Abrar Studio 3.0.1
+# Abrar Studio 3.0.2
 
 Abrar Studio is a local-first Windows application for Korean 2D cinematic motion-webtoon production. Version 3 adds an articulated side-view puppet engine so Seo-yeon and Min-jun can walk, run, stop, recoil and move across scenes with independently rotated limb segments, automatic footstep timing and tracking-camera travel.
 
@@ -18,6 +18,12 @@ The two locked lead characters include local, reusable articulated rigs with:
 - two-person locomotion with staggered footsteps
 
 These rig and motion files are installed once and remain on the PC. They are not downloaded for each video.
+
+## Diagnostics and privacy
+
+Version 3.0.2 adds a Diagnostics page with full local checks, recent redacted errors, workflow timing, device health and an exportable support report. Anonymous fleet monitoring through PostHog is opt-in. It uses a random installation ID and sends only app/device metadata, operation names and timing, quality scores, and redacted error details. API keys, dialogue, prompts, project paths, filenames, usernames and media are never sent.
+
+Gemini TTS multi-take failures now retain the underlying provider response, so quota, permission, model and network failures can be diagnosed instead of appearing only as a generic error. Audio quality measurements reject silent, clipped or implausibly short takes and record privacy-safe quality metrics.
 
 ## Automatic updates
 

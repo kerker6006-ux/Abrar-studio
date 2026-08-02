@@ -7,7 +7,9 @@ from copy import deepcopy
 import queue
 import shutil
 import threading
+import time
 import tkinter as tk
+import uuid
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 from typing import Callable
@@ -17,6 +19,7 @@ from PIL import Image, ImageTk
 from .constants import APP_NAME, APP_VERSION
 from .character_packs import CharacterPackError
 from .credentials import CredentialError, CredentialStore
+from .diagnostics import run_diagnostics, write_report
 from .gemini_tts import GeminiTTSClient, TTSGenerationError
 from .alignment import build_alignment
 from .models import ActorCue, Episode, ModelError, SFXCue, Scene, Shot
@@ -24,6 +27,7 @@ from .paths import app_root
 from .project import StudioProject
 from .renderer import AnimaticRenderer, RenderError
 from .settings import AppSettings, SettingsStore
+from .telemetry import system_profile, telemetry
 from .updater import GitHubUpdater, UpdateError
 from .validator import QualityValidator, ValidationReport
 
@@ -50,6 +54,7 @@ class StudioApp(tk.Tk):
         self.configure(bg=BG)
         self.settings_store = SettingsStore()
         self.settings = self.settings_store.load()
+        telemetry.configure(self.settings.telemetry_enabled)
         bundled_ffmpeg = app_root() / "tools" / ("ffmpeg.exe" if __import__("os").name == "nt" else "ffmpeg")
         if self.settings.ffmpeg_path == "ffmpeg" and bundled_ffmpeg.exists():
             self.settings.ffmpeg_path = str(bundled_ffmpeg)
@@ -65,6 +70,11 @@ class StudioApp(tk.Tk):
         self._build_shell()
         self._show_page("Dashboard")
         self.after(120, self._poll_tasks)
+        self.protocol("WM_DELETE_WINDOW", self._close_app)
+        if not self.settings.telemetry_consent_shown:
+            self.after(700, self._ask_telemetry_consent)
+        else:
+            telemetry.capture("abrar_app_opened", system_profile())
         if self.settings.auto_check_updates and self.settings.update_owner and self.settings.update_repo:
             self.after(2500, self._auto_update_check)
 
@@ -77,6 +87,11 @@ class StudioApp(tk.Tk):
         self.settings.project_path = str(project.root)
         self.settings_store.save(self.settings)
         return project
+
+    def report_callback_exception(self, exc_type, exc_value, exc_traceback) -> None:
+        """Capture unexpected Tk callback failures without exposing private project data."""
+        telemetry.capture_exception("interface", exc_value)
+        messagebox.showerror("Unexpected problem", f"{exc_type.__name__}: {exc_value}", parent=self)
 
     def _first_episode_path(self) -> Path:
         files = self.project.episode_files()
@@ -106,6 +121,7 @@ class StudioApp(tk.Tk):
         nav_items = [
             ("Dashboard", "▦"), ("Characters", "◉"), ("Episode Script", "≡"), ("Shot Builder", "◫"),
             ("Voice Studio", "◖"), ("Production", "▶"), ("Quality Check", "✓"),
+            ("Diagnostics", "i"),
             ("Settings", "⚙"),
         ]
         nav = tk.Frame(sidebar, bg="#0a0e18")
@@ -130,6 +146,7 @@ class StudioApp(tk.Tk):
         self._pages["Voice Studio"] = self._build_voice_page()
         self._pages["Production"] = self._build_production_page()
         self._pages["Quality Check"] = self._build_quality_page()
+        self._pages["Diagnostics"] = self._build_diagnostics_page()
         self._pages["Settings"] = self._build_settings_page()
 
     def _new_page(self, title: str, subtitle: str) -> tuple[tk.Frame, tk.Frame]:
@@ -156,6 +173,8 @@ class StudioApp(tk.Tk):
             self._run_validation(require_voices=False)
         elif name == "Shot Builder":
             self._shot_builder_refresh()
+        elif name == "Diagnostics":
+            self._refresh_diagnostics()
 
     def _card(self, parent: tk.Widget, **pack) -> tk.Frame:
         frame = tk.Frame(parent, bg=PANEL, highlightthickness=1, highlightbackground=BORDER)
@@ -819,6 +838,13 @@ class StudioApp(tk.Tk):
             tk.Label(middle, text=item.detail, bg=PANEL, fg=MUTED, justify="left", wraplength=780).pack(anchor="w", pady=(3, 0))
             tk.Label(row, text="PASS" if item.passed else "BLOCK", bg=PANEL, fg=GREEN if item.passed else RED, font=("Segoe UI", 9, "bold")).pack(side="right", padx=20)
         passed = sum(1 for item in report.results if item.passed)
+        telemetry.capture("abrar_quality_report", {
+            "score": report.score,
+            "passed": report.passed,
+            "passed_gates": passed,
+            "total_gates": len(report.results),
+            "failed_gates": [item.gate for item in report.results if not item.passed],
+        })
         self.quality_summary.configure(text=f"Quality {report.score}/100 • {passed}/{len(report.results)} gates passed", fg=GREEN if report.passed else RED)
         if hasattr(self, "production_log"):
             self._prod_log(f"Quality validation: {passed}/{len(report.results)} passed")
@@ -853,6 +879,12 @@ class StudioApp(tk.Tk):
         self._button(system, "Open folder", self._open_project_folder).grid(row=2, column=2, padx=(0, 20), pady=8)
         system.columnconfigure(1, weight=1)
         self._button(system, "Save local settings", self._save_settings, primary=True).grid(row=3, column=1, sticky="w", padx=10, pady=(10, 18))
+
+        privacy = self._card(body, fill="x", pady=(0, 14))
+        tk.Label(privacy, text="Anonymous diagnostics", bg=PANEL, fg=TEXT, font=("Segoe UI", 13, "bold")).pack(anchor="w", padx=20, pady=(18, 5))
+        tk.Label(privacy, text="Share device type, app version, operation timing, quality scores and redacted errors. API keys, dialogue, prompts, projects, filenames, usernames and videos are never sent.", bg=PANEL, fg=MUTED, wraplength=900, justify="left").pack(anchor="w", padx=20)
+        self.telemetry_var = tk.BooleanVar(value=self.settings.telemetry_enabled)
+        tk.Checkbutton(privacy, text="Help improve Abrar Studio with anonymous diagnostics", variable=self.telemetry_var, bg=PANEL, fg=TEXT, selectcolor="#0b1020", activebackground=PANEL, activeforeground=TEXT).pack(anchor="w", padx=20, pady=(10, 18))
 
         updates = self._card(body, fill="x")
         tk.Label(updates, text="Automatic updates", bg=PANEL, fg=TEXT, font=("Segoe UI", 13, "bold")).grid(row=0, column=0, columnspan=3, sticky="w", padx=20, pady=(18, 5))
@@ -917,8 +949,76 @@ class StudioApp(tk.Tk):
         self.settings.project_path = self.project_entry.get().strip()
         self.settings.update_owner = self.update_owner_entry.get().strip()
         self.settings.update_repo = self.update_repo_entry.get().strip()
+        self.settings.telemetry_enabled = bool(self.telemetry_var.get())
+        self.settings.telemetry_consent_shown = True
         self.settings_store.save(self.settings)
+        telemetry.configure(self.settings.telemetry_enabled)
         self.settings_status.configure(text="Settings saved", fg=GREEN)
+
+    # Diagnostics
+    def _build_diagnostics_page(self) -> tk.Frame:
+        page, body = self._new_page("Diagnostics", "Device health, workflow timing, redacted errors and a shareable support report")
+        controls = self._card(body, fill="x", pady=(0, 14))
+        self.diagnostics_status = tk.Label(controls, text="", bg=PANEL, fg=MUTED, justify="left", font=("Segoe UI", 11, "bold"))
+        self.diagnostics_status.pack(anchor="w", padx=20, pady=(18, 10))
+        buttons = tk.Frame(controls, bg=PANEL)
+        buttons.pack(fill="x", padx=20, pady=(0, 18))
+        self._button(buttons, "Run full analysis", self._run_full_diagnostics, primary=True).pack(side="left")
+        self._button(buttons, "Export support report", self._export_support_report).pack(side="left", padx=10)
+        tk.Label(controls, text="The report contains device specifications, checks and recent redacted events. It does not intentionally collect your Gemini key, scripts, dialogue, prompts, username or media content. A redacted error description or failing asset name may appear for troubleshooting.", bg=PANEL, fg=MUTED, wraplength=900, justify="left").pack(anchor="w", padx=20, pady=(0, 18))
+        logs = self._card(body, fill="both", expand=True)
+        self.diagnostics_text = tk.Text(logs, bg="#0b1020", fg=TEXT, insertbackground=TEXT, relief="flat", wrap="word", font=("Consolas", 10))
+        self.diagnostics_text.pack(fill="both", expand=True, padx=14, pady=14)
+        return page
+
+    def _refresh_diagnostics(self) -> None:
+        sharing = "ON" if telemetry.enabled else "OFF"
+        self.diagnostics_status.configure(text=f"Anonymous sharing: {sharing}  •  Installation ID: {telemetry.installation_id[:8]}…", fg=GREEN if telemetry.enabled else MUTED)
+        events = telemetry.recent_events(limit=100)
+        self.diagnostics_text.delete("1.0", "end")
+        if not events:
+            self.diagnostics_text.insert("end", "No diagnostic events recorded yet.\n")
+            return
+        for event in reversed(events):
+            props = event.get("properties", {})
+            self.diagnostics_text.insert("end", f"{event.get('timestamp', '')}  {event.get('event', 'event')}\n")
+            if props:
+                self.diagnostics_text.insert("end", f"  {json.dumps(props, ensure_ascii=False)}\n")
+
+    def _run_full_diagnostics(self) -> None:
+        self.diagnostics_status.configure(text="Running full device and project analysis…", fg=CYAN)
+        self._run_task("diagnostics", lambda: run_diagnostics(self.project, self.settings.ffmpeg_path))
+
+    def _export_support_report(self) -> None:
+        path = filedialog.asksaveasfilename(parent=self, defaultextension=".json", initialfile=f"AbrarStudio-Support-{APP_VERSION}.json", filetypes=[("JSON report", "*.json")])
+        if not path:
+            return
+        try:
+            items = run_diagnostics(self.project, self.settings.ffmpeg_path)
+            write_report(Path(path), items)
+            telemetry.capture("abrar_support_report_exported", {"passed": all(item.passed for item in items)})
+            messagebox.showinfo("Support report ready", path, parent=self)
+        except Exception as exc:
+            telemetry.capture_exception("support_report", exc)
+            messagebox.showerror("Support report failed", str(exc), parent=self)
+
+    def _ask_telemetry_consent(self) -> None:
+        enabled = messagebox.askyesno(
+            "Help improve Abrar Studio?",
+            "Share anonymous device specifications, operation timing, quality scores and redacted errors?\n\nAPI keys, dialogue, prompts, project files, filenames, usernames and videos are never sent. You can change this in Settings.",
+            parent=self,
+        )
+        self.settings.telemetry_consent_shown = True
+        self.settings.telemetry_enabled = enabled
+        self.settings_store.save(self.settings)
+        telemetry.configure(enabled)
+        if hasattr(self, "telemetry_var"):
+            self.telemetry_var.set(enabled)
+        telemetry.capture("abrar_app_opened", system_profile())
+
+    def _close_app(self) -> None:
+        telemetry.capture("abrar_app_closed")
+        self.destroy()
 
     def _auto_update_check(self) -> None:
         try:
@@ -943,11 +1043,21 @@ class StudioApp(tk.Tk):
 
     # Background task plumbing
     def _run_task(self, name: str, function: Callable[[], object]) -> None:
+        task_id = str(uuid.uuid4())
+        telemetry.capture("abrar_operation_started", {"operation": name, "task_id": task_id})
+
         def runner() -> None:
+            started = time.monotonic()
             try:
                 result = function()
+                telemetry.capture("abrar_operation_completed", {
+                    "operation": name,
+                    "task_id": task_id,
+                    "duration_seconds": round(time.monotonic() - started, 3),
+                })
                 self._task_queue.put((f"{name}:ok", result))
             except Exception as exc:
+                telemetry.capture_exception(name, exc, time.monotonic() - started)
                 self._task_queue.put((f"{name}:error", exc))
         threading.Thread(target=runner, daemon=True).start()
 
@@ -964,6 +1074,8 @@ class StudioApp(tk.Tk):
                     name = event.split(":", 1)[0]
                     if name in {"update", "update_install", "keytest"}:
                         self.settings_status.configure(text=f"{name} failed: {payload}", fg=RED)
+                    elif name == "diagnostics":
+                        self.diagnostics_status.configure(text=f"Analysis failed: {payload}", fg=RED)
                     else:
                         self.production_status.configure(text=f"{name} failed", fg=RED)
                         if name == "voice":
@@ -974,6 +1086,14 @@ class StudioApp(tk.Tk):
                 elif event == "keytest:ok":
                     self.settings_status.configure(text="Gemini Korean TTS connection verified", fg=GREEN)
                     messagebox.showinfo("Gemini verified", "The API key generated a valid Korean TTS WAV.", parent=self)
+                elif event == "diagnostics:ok":
+                    items = payload
+                    passed = sum(1 for item in items if item.passed)
+                    telemetry.capture("abrar_diagnostics_run", {"passed_checks": passed, "total_checks": len(items)})
+                    self.diagnostics_status.configure(text=f"Analysis complete: {passed}/{len(items)} checks passed", fg=GREEN if passed == len(items) else PINK)
+                    self.diagnostics_text.delete("1.0", "end")
+                    for item in items:
+                        self.diagnostics_text.insert("end", f"{'PASS' if item.passed else 'PROBLEM'}  {item.name}\n  {item.detail}\n\n")
                 elif event == "voice:ok":
                     self._log_voice(f"Approved take cached:\n{payload}")
                 elif event == "voices:ok":
