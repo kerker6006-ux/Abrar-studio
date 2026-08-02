@@ -21,7 +21,7 @@
     "profile_id": "MJ_VOICE_1.0",
     "character_id": "min_jun",
     "voice_name": "Orus",
-    "normal_model": "gemini-2.5-flash-preview-tts",
+    "normal_model": "gemini-3.1-flash-tts-preview",
     "emotional_model": "gemini-2.5-pro-preview-tts",
     "language": "ko-KR",
     "version": "1.0",

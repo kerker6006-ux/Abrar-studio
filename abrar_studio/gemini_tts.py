@@ -55,6 +55,8 @@ class GeminiTTSClient:
         model = profile.emotional_model if use_pro else profile.normal_model
         direction = shot.voice_direction.strip() or _default_direction(shot.emotion, shot.emotion_level)
         prompt = (
+            "Synthesize speech audio only. Read exactly the text under # TRANSCRIPT; "
+            "do not read the headings or directions aloud.\n\n"
             f"# AUDIO PROFILE: {character.display_name}\n"
             f"Korean dramatic animation character. Keep the same underlying speaker identity and vocal age.\n"
             f"{profile.audio_profile.strip()}\n\n"
@@ -112,7 +114,11 @@ class GeminiTTSClient:
         request_data = TTSRequest(
             model=GEMINI_FLASH_TTS,
             voice=VOICE_SEO_YEON,
-            prompt="한국어로 자연스럽고 짧게 말하세요: 연결 확인이 완료되었습니다.",
+            prompt=(
+                "Synthesize speech audio only in natural Korean. Read exactly the text "
+                "under # TRANSCRIPT.\n\n# TRANSCRIPT\n"
+                "\uc5f0\uacb0 \ud655\uc778\uc774 \uc644\ub8cc\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+            ),
             cache_key="connection-test",
         )
         self.generate(request_data, output_path)
@@ -201,6 +207,17 @@ def _extract_audio_base64(result: dict[str, Any]) -> str:
                     item.get("audio", {}).get("data") if isinstance(item.get("audio"), dict) else None,
                     item.get("output_audio", {}).get("data") if isinstance(item.get("output_audio"), dict) else None,
                 ])
+    steps = result.get("steps")
+    if isinstance(steps, list):
+        for step in steps:
+            if not isinstance(step, dict) or step.get("type") != "model_output":
+                continue
+            content = step.get("content")
+            if not isinstance(content, list):
+                continue
+            for item in content:
+                if isinstance(item, dict) and item.get("type") == "audio":
+                    candidates.append(item.get("data"))
     for value in candidates:
         if isinstance(value, str) and value:
             return value
