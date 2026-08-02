@@ -22,7 +22,7 @@ def sha256_locked_asset(path: Path, rel: str) -> str:
 
 
 def load_manifest(path: Path) -> CharacterManifest:
-    with path.open("r", encoding="utf-8") as fh:
+    with path.open("r", encoding="utf-8-sig") as fh:
         return CharacterManifest.from_dict(json.load(fh))
 
 

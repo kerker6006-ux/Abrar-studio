@@ -10,6 +10,7 @@ from .gemini_tts import GeminiTTSClient
 from .locks import verify_manifest
 from .limited_animation import inspect_sequence, sequence_name
 from .models import Episode
+from .paths import app_root
 from .project import StudioProject
 from .puppet import RigDefinition, normalize_motion, uses_articulated_motion
 
@@ -273,7 +274,8 @@ class QualityValidator:
 
     def _pacing(self, episode: Episode, report: ValidationReport) -> None:
         long_static = [shot.id for scene in episode.scenes for shot in scene.shots if shot.duration > 4 and shot.camera == "static"]
-        hook_ok = bool(episode.scenes and episode.scenes[0].shots and episode.scenes[0].shots[0].duration <= 3.5)
+        hook_shot = episode.scenes[0].shots[0] if episode.scenes and episode.scenes[0].shots else None
+        hook_ok = bool(hook_shot and (hook_shot.duration <= 3.5 or (hook_shot.dialogue and hook_shot.duration <= 5.5)))
         transitions = [shot.id for scene in episode.scenes for shot in scene.shots if shot.transition not in {"cut", "fade", "dip_black", "flash", "whip"}]
         voice_overruns: list[str] = []
         for scene in episode.scenes:
@@ -297,7 +299,10 @@ class QualityValidator:
         report.add("Pacing and transitions", passed, detail, 2)
 
     def _render_tool(self, report: ValidationReport) -> None:
-        executable = shutil.which(self.ffmpeg_path) if not Path(self.ffmpeg_path).is_file() else self.ffmpeg_path
+        bundled = app_root() / "tools" / "ffmpeg.exe"
+        executable = self.ffmpeg_path if Path(self.ffmpeg_path).is_file() else None
+        executable = executable or (str(bundled) if bundled.exists() else None)
+        executable = executable or shutil.which(self.ffmpeg_path) or shutil.which("ffmpeg")
         report.add("FFmpeg", bool(executable), f"Found: {executable}" if executable else "FFmpeg not found; set its path in Settings", 2)
 
     def _continuity(self, episode: Episode, report: ValidationReport) -> None:

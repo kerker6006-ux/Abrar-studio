@@ -317,7 +317,7 @@ class Episode:
 
     @classmethod
     def load(cls, path: Path) -> "Episode":
-        with path.open("r", encoding="utf-8") as fh:
+        with path.open("r", encoding="utf-8-sig") as fh:
             return cls.from_dict(json.load(fh))
 
     def to_dict(self) -> dict[str, Any]:

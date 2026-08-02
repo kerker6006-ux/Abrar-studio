@@ -1,4 +1,4 @@
-# Abrar Studio 3.1.0
+# Abrar Studio 3.1.1
 
 Abrar Studio is a local-first Windows application for Korean 2D cinematic motion-webtoon production. The reference-limited renderer uses approved complete character drawings for basic walking, speaking-mouth movement, blinks, expression swaps and camera moves. It does not generate a new video frame with an AI model during production.
 
@@ -30,6 +30,8 @@ Version 3.0.3 makes this replacement atomic: the existing installation is preser
 Version 3.0.4 routes normal dialogue to Gemini 3.1 Flash TTS, retains Gemini 2.5 Pro TTS for complex and emotional performances, and reads audio from Google's current Interactions `steps` response schema.
 
 Version 3.0.5 prepares updates before shutdown, launches the PowerShell helper from the UI thread without detached-process mode, verifies that the helper survived startup, and records early launch failures in the support report.
+
+Version 3.1.1 repairs upgraded default projects by force-refreshing bundled character and background assets, and maps legacy walking motion names to the approved complete-frame walk loop.
 
 ## Complete episode pipeline
 
