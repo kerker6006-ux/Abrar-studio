@@ -55,6 +55,7 @@ class StudioApp(tk.Tk):
         self.configure(bg=BG)
         self.settings_store = SettingsStore()
         self.settings = self.settings_store.load()
+        self._previous_update_result = GitHubUpdater.consume_previous_result()
         telemetry.configure(self.settings.telemetry_enabled)
         configure_sentry(self.settings.telemetry_enabled)
         bundled_ffmpeg = app_root() / "tools" / ("ffmpeg.exe" if __import__("os").name == "nt" else "ffmpeg")
@@ -72,12 +73,14 @@ class StudioApp(tk.Tk):
         self._build_shell()
         self._show_page("Dashboard")
         self.after(120, self._poll_tasks)
+        self.after(900, self._show_previous_update_result)
         self.protocol("WM_DELETE_WINDOW", self._close_app)
         if not self.settings.telemetry_consent_shown:
             self.after(700, self._ask_telemetry_consent)
         else:
             telemetry.capture("abrar_app_opened", system_profile())
-        if self.settings.auto_check_updates and self.settings.update_owner and self.settings.update_repo:
+        previous_update_failed = bool(self._previous_update_result and self._previous_update_result.get("status") == "failed")
+        if self.settings.auto_check_updates and self.settings.update_owner and self.settings.update_repo and not previous_update_failed:
             self.after(2500, self._auto_update_check)
 
     def _load_project(self) -> StudioProject:
@@ -1034,6 +1037,19 @@ class StudioApp(tk.Tk):
             # Startup checks are silent; the manual Settings action shows errors.
             return
 
+    def _show_previous_update_result(self) -> None:
+        result = self._previous_update_result
+        if not result:
+            return
+        if result.get("status") == "success":
+            messagebox.showinfo("Update complete", result.get("message", "Abrar Studio was updated successfully."), parent=self)
+        else:
+            messagebox.showerror(
+                "Update failed",
+                f"Abrar Studio restored the previous version.\n\n{result.get('message', 'Unknown updater error')}\n\nOpen Diagnostics and export a support report for help.",
+                parent=self,
+            )
+
     def _check_update(self) -> None:
         self._save_settings()
         try:
@@ -1130,7 +1146,7 @@ class StudioApp(tk.Tk):
                             updater = GitHubUpdater(self.settings.update_owner, self.settings.update_repo, APP_VERSION)
                             self._run_task("update_install", lambda: updater.download_and_launch(payload))
                 elif event == "update_install:ok":
-                    messagebox.showinfo("Update ready", "Abrar Studio will close, update itself, and reopen automatically.", parent=self)
+                    messagebox.showinfo("Update ready", "Abrar Studio will close, apply and verify the update, then reopen automatically.", parent=self)
                     self.destroy()
         except queue.Empty:
             pass

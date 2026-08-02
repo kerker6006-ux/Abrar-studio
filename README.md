@@ -29,6 +29,8 @@ Gemini TTS multi-take failures now retain the underlying provider response, so q
 
 After the initial installation, Abrar Studio checks its GitHub release channel at startup. A newer release is downloaded as a checksum-verified update package; the app closes, replaces its program files, and reopens automatically. User settings, encrypted credentials, projects, renders and cached voices are preserved, so future versions do not require reinstalling.
 
+Version 3.0.3 makes this replacement atomic: the existing installation is preserved until the staged executable is hash-verified, the directory swap succeeds, and the installed executable matches the staged hash. A failed update rolls back, writes a persistent updater log, shows the actual failure on the next launch, and suppresses an immediate repeat prompt.
+
 ## Complete episode pipeline
 
 1. Create or import an episode JSON.

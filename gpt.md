@@ -465,7 +465,7 @@ The repository workflow at `.github/workflows/windows-release.yml` is intended t
 7. create or update a `v<version>` GitHub Release;
 8. upload the installer pair plus `AbrarStudio-Update.zip` and its SHA-256 file.
 
-The app’s updater checks the repository’s latest release, verifies the update ZIP and SHA-256 file, closes the running app, replaces installed program files, and reopens automatically. Settings, encrypted credentials, projects, renders and cached voices are stored outside the installation directory and remain untouched.
+The app’s updater checks the repository’s latest release, verifies the update ZIP and SHA-256 file, closes the running app, builds a staged copy beside the installation, preserves installer metadata, atomically swaps directories, verifies the installed executable hash, and reopens automatically. Failure rolls back to the previous installation, persists `updater.log` and `update-result.json`, and suppresses an immediate repeat prompt. Settings, encrypted credentials, projects, renders and cached voices are stored outside the installation directory and remain untouched.
 
 ## 18. Source module map
 
