@@ -31,6 +31,8 @@ from .settings import AppSettings, SettingsStore
 from .telemetry import system_profile, telemetry
 from .updater import GitHubUpdater, UpdateError
 from .validator import QualityValidator, ValidationReport
+from .signal214 import SAMPLE_KOREAN_SCRIPT, SignalEpisode, SignalScriptCompiler, SignalScriptError
+from .signal214_renderer import Signal214Renderer, SignalRenderError, generate_signal_narration
 
 
 BG = "#0d111d"
@@ -69,9 +71,10 @@ class StudioApp(tk.Tk):
         self._task_queue: queue.Queue[tuple[str, object]] = queue.Queue()
         self._pages: dict[str, tk.Frame] = {}
         self._nav_buttons: dict[str, tk.Button] = {}
+        self.current_signal_episode: SignalEpisode | None = None
         self._configure_styles()
         self._build_shell()
-        self._show_page("Dashboard")
+        self._show_page("Signal 2:14")
         self.after(120, self._poll_tasks)
         self.after(900, self._show_previous_update_result)
         self.protocol("WM_DELETE_WINDOW", self._close_app)
@@ -124,7 +127,7 @@ class StudioApp(tk.Tk):
         tk.Label(brand, text="STUDIO • 2:14 UNIVERSE", bg="#0a0e18", fg=PINK, font=("Segoe UI", 9, "bold")).pack(anchor="w", padx=31)
 
         nav_items = [
-            ("Dashboard", "▦"), ("Characters", "◉"), ("Episode Script", "≡"), ("Shot Builder", "◫"),
+            ("Signal 2:14", "●"), ("Dashboard", "▦"), ("Characters", "◉"), ("Episode Script", "≡"), ("Shot Builder", "◫"),
             ("Voice Studio", "◖"), ("Production", "▶"), ("Readiness Check", "✓"),
             ("Diagnostics", "i"),
             ("Settings", "⚙"),
@@ -140,10 +143,11 @@ class StudioApp(tk.Tk):
             )
             btn.pack(fill="x", pady=2)
             self._nav_buttons[name] = btn
-        tk.Label(sidebar, text=f"v{APP_VERSION}\nLocal-first • 720p", bg="#0a0e18", fg="#63708b", justify="left").pack(side="bottom", anchor="w", padx=28, pady=25)
+        tk.Label(sidebar, text=f"v{APP_VERSION}\nKorean Shorts • 9:16", bg="#0a0e18", fg="#63708b", justify="left").pack(side="bottom", anchor="w", padx=28, pady=25)
 
         self.content = tk.Frame(self, bg=BG)
         self.content.pack(side="left", fill="both", expand=True)
+        self._pages["Signal 2:14"] = self._build_signal_page()
         self._pages["Dashboard"] = self._build_dashboard()
         self._pages["Characters"] = self._build_characters()
         self._pages["Episode Script"] = self._build_script_page()
@@ -193,6 +197,169 @@ class StudioApp(tk.Tk):
             activeforeground=TEXT, relief="flat", bd=0, padx=18, pady=10, cursor="hand2",
             font=("Segoe UI", 10, "bold"),
         )
+
+    # Signal 2:14 Korean Shorts
+    def _build_signal_page(self) -> tk.Frame:
+        page, body = self._new_page(
+            "Signal 2:14 — Korean Shorts",
+            "한국어 대본을 붙여 넣으면 세로형 증거 공포 쇼츠를 자동 제작합니다",
+        )
+        top = tk.Frame(body, bg=BG)
+        top.pack(fill="both", expand=True)
+
+        editor_card = tk.Frame(top, bg=PANEL, highlightthickness=1, highlightbackground=BORDER)
+        editor_card.pack(side="left", fill="both", expand=True, padx=(0, 10))
+        tk.Label(editor_card, text="1. 한국어 대본", bg=PANEL, fg=TEXT, font=("Segoe UI", 14, "bold")).pack(anchor="w", padx=20, pady=(18, 5))
+        tk.Label(
+            editor_card,
+            text="30~60초 분량의 완성된 허구 이야기를 입력하세요. 첫 문장은 훅, 마지막 문장은 반전 또는 질문으로 작성합니다.",
+            bg=PANEL, fg=MUTED, wraplength=650, justify="left",
+        ).pack(anchor="w", padx=20, pady=(0, 12))
+        title_row = tk.Frame(editor_card, bg=PANEL)
+        title_row.pack(fill="x", padx=20, pady=(0, 10))
+        tk.Label(title_row, text="제목", bg=PANEL, fg=MUTED).pack(side="left")
+        self.signal_title_entry = tk.Entry(title_row, bg="#0b1020", fg=TEXT, insertbackground=TEXT, relief="flat")
+        self.signal_title_entry.pack(side="left", fill="x", expand=True, padx=(12, 0), ipady=8)
+        text_frame = tk.Frame(editor_card, bg="#0b1020")
+        text_frame.pack(fill="both", expand=True, padx=20, pady=(0, 14))
+        self.signal_script = tk.Text(
+            text_frame, bg="#0b1020", fg="#eef4f1", insertbackground=TEXT, selectbackground="#51398b",
+            relief="flat", bd=0, padx=15, pady=14, undo=True, wrap="word", font=("Malgun Gothic", 11),
+        )
+        signal_scroll = ttk.Scrollbar(text_frame, orient="vertical", command=self.signal_script.yview)
+        self.signal_script.configure(yscrollcommand=signal_scroll.set)
+        signal_scroll.pack(side="right", fill="y")
+        self.signal_script.pack(fill="both", expand=True)
+        self.signal_script.insert("1.0", SAMPLE_KOREAN_SCRIPT)
+        editor_buttons = tk.Frame(editor_card, bg=PANEL)
+        editor_buttons.pack(fill="x", padx=20, pady=(0, 18))
+        self._button(editor_buttons, "샘플 불러오기", self._signal_load_sample).pack(side="left")
+        self._button(editor_buttons, "대본 분석", self._signal_analyze, primary=True).pack(side="left", padx=(8, 0))
+
+        review_card = tk.Frame(top, bg=PANEL, width=380, highlightthickness=1, highlightbackground=BORDER)
+        review_card.pack(side="left", fill="y", padx=(10, 0))
+        review_card.pack_propagate(False)
+        tk.Label(review_card, text="2. 품질 검사", bg=PANEL, fg=TEXT, font=("Segoe UI", 14, "bold")).pack(anchor="w", padx=20, pady=(18, 10))
+        self.signal_scores = tk.Label(
+            review_card, text="대본 분석을 실행하세요", bg=PANEL, fg=MUTED,
+            justify="left", wraplength=335, font=("Malgun Gothic", 10),
+        )
+        self.signal_scores.pack(anchor="w", fill="x", padx=20)
+        self.signal_preview_label = tk.Label(review_card, bg="#080b10", fg=MUTED, text="장면 미리보기")
+        self.signal_preview_label.pack(fill="x", padx=20, pady=16, ipady=65)
+        self._button(review_card, "장면 미리보기 생성", self._signal_preview).pack(fill="x", padx=20, pady=(0, 8))
+        self._button(review_card, "한국어 최종 영상 만들기", self._signal_render, primary=True).pack(fill="x", padx=20)
+        self.signal_progress = ttk.Progressbar(review_card, maximum=100)
+        self.signal_progress.pack(fill="x", padx=20, pady=(16, 8))
+        self.signal_status = tk.Label(
+            review_card, text="준비됨", bg=PANEL, fg=MUTED, justify="left", wraplength=335,
+            font=("Malgun Gothic", 9),
+        )
+        self.signal_status.pack(anchor="w", fill="x", padx=20, pady=(0, 18))
+
+        footer = self._card(body, fill="x", pady=(18, 0))
+        tk.Label(footer, text="출력 기준", bg=PANEL, fg=PINK, font=("Segoe UI", 11, "bold")).pack(side="left", padx=(18, 10), pady=13)
+        tk.Label(
+            footer,
+            text="1080×1920 • 한국어 연기 음성 • 모바일 자막 • 원본 증거 화면 • 허구 고지 • 60초 미만",
+            bg=PANEL, fg=MUTED, font=("Malgun Gothic", 9),
+        ).pack(side="left", pady=13)
+        return page
+
+    def _signal_load_sample(self) -> None:
+        self.signal_title_entry.delete(0, "end")
+        self.signal_title_entry.insert(0, "새벽 2시 14분, 3번 카메라")
+        self.signal_script.delete("1.0", "end")
+        self.signal_script.insert("1.0", SAMPLE_KOREAN_SCRIPT)
+        self.current_signal_episode = None
+        self.signal_scores.configure(text="샘플을 불러왔습니다. 대본 분석을 실행하세요.", fg=MUTED)
+
+    def _signal_compile_current(self) -> tuple[SignalEpisode, object]:
+        script = self.signal_script.get("1.0", "end").strip()
+        title = self.signal_title_entry.get().strip()
+        compiler = SignalScriptCompiler()
+        episode = compiler.compile(script, title)
+        history = self.project.root / "signal214" / "history.json"
+        report = compiler.quality(episode, history)
+        self.current_signal_episode = episode
+        return episode, report
+
+    def _signal_analyze(self) -> None:
+        try:
+            episode, report = self._signal_compile_current()
+        except SignalScriptError as exc:
+            self.signal_scores.configure(text=f"수정 필요\n\n{exc}", fg=RED)
+            self.signal_status.configure(text="대본을 수정한 뒤 다시 분석하세요.", fg=RED)
+            return
+        problem_text = "\n".join(f"• {item}" for item in report.problems)
+        note_text = "\n".join(f"• {item}" for item in report.notes)
+        summary = (
+            f"종합 {report.overall}/100\n\n"
+            f"기술 안정성  {report.technical}/100\n"
+            f"이야기/유지율  {report.story}/100\n"
+            f"화면 다양성  {report.visual}/100\n\n"
+            f"예상 길이  {episode.duration:.1f}초\n"
+            f"증거 장면  {len(episode.beats)}개"
+        )
+        if problem_text:
+            summary += f"\n\n반드시 수정\n{problem_text}"
+        if note_text:
+            summary += f"\n\n권장 개선\n{note_text}"
+        self.signal_scores.configure(text=summary, fg=GREEN if report.passed else PINK)
+        self.signal_status.configure(
+            text="제작 가능" if report.passed else "점수를 확인하세요. 심각한 문제는 제작을 차단합니다.",
+            fg=GREEN if report.passed else PINK,
+        )
+
+    def _signal_preview(self) -> None:
+        try:
+            episode, report = self._signal_compile_current()
+        except SignalScriptError as exc:
+            messagebox.showerror("대본 확인", str(exc), parent=self)
+            return
+        if report.problems:
+            messagebox.showerror("품질 검사 실패", "\n".join(report.problems), parent=self)
+            return
+        output = self.project.temp_dir / "signal214_contact_sheet.jpg"
+        renderer = Signal214Renderer(self.settings.ffmpeg_path, self.project.assets_dir / "signal214")
+        self.signal_status.configure(text="장면 미리보기를 만드는 중…", fg=CYAN)
+        self._run_task("signal_preview", lambda: renderer.contact_sheet(episode, output, columns=3))
+
+    def _signal_render(self) -> None:
+        try:
+            episode, report = self._signal_compile_current()
+        except SignalScriptError as exc:
+            messagebox.showerror("대본 확인", str(exc), parent=self)
+            return
+        if report.problems:
+            messagebox.showerror("품질 검사 실패", "\n".join(report.problems), parent=self)
+            return
+        api_key = self.credentials.get_api_key()
+        if not api_key:
+            messagebox.showwarning("Gemini 키 필요", "Settings에서 Gemini API 키를 저장한 뒤 다시 실행하세요.", parent=self)
+            return
+        episode_dir = self.project.root / "signal214" / "episodes"
+        episode_path = episode_dir / f"{episode.episode_id}.json"
+        output = self.project.render_dir / f"{episode.episode_id}_Korean_Short_1080x1920.mp4"
+        voice_dir = self.project.audio_dir / "signal214"
+        renderer = Signal214Renderer(self.settings.ffmpeg_path, self.project.assets_dir / "signal214")
+
+        def progress(value: float, text: str) -> None:
+            self._task_queue.put(("signal_progress", (value, text)))
+
+        def work() -> dict[str, Path]:
+            episode.save(episode_path)
+            progress(2, "한국어 내레이션을 연기하는 중")
+            voice = generate_signal_narration(api_key, episode, voice_dir)
+            progress(8, "음성 검증 완료 — 세로 영상을 만드는 중")
+            renderer.render(episode, output, voice, progress)
+            sheet = renderer.contact_sheet(episode, self.project.temp_dir / "signal214_final_contact_sheet.jpg")
+            SignalScriptCompiler.remember(episode, self.project.root / "signal214" / "history.json")
+            return {"video": output, "sheet": sheet, "episode": episode_path, "voice": voice}
+
+        self.signal_progress["value"] = 0
+        self.signal_status.configure(text="최종 제작을 시작했습니다. 앱을 닫지 마세요.", fg=CYAN)
+        self._run_task("signal_render", work)
 
     # Dashboard
     def _build_dashboard(self) -> tk.Frame:
@@ -448,8 +615,8 @@ class StudioApp(tk.Tk):
         combo("Expression", "expression", ["neutral", "smile", "suspicious", "shock", "anger", "embarrassed", "sad", "breakdown"], 3)
         combo("Emotion", "emotion", ["neutral", "suspicious", "shock", "anger", "fear", "crying", "romantic", "comedy", "determined"], 4)
         combo("Intensity", "level", ["1", "2", "3", "4", "5"], 5, "3")
-        combo("Acting", "acting", ["idle", "listen", "recoil", "lean_in", "collapse", "shy", "nod", "head_shake", "walk", "run"], 6)
-        combo("Articulated motion", "motion", ["auto", "idle_breathe", "walk_slow", "walk_normal", "walk_confident", "walk_sad", "run_normal", "run_panicked", "start_walk", "stop_sudden", "step_back", "shock_recoil"], 7, "auto")
+        combo("Acting", "acting", ["idle", "listen", "recoil", "lean_in", "collapse", "shy", "nod", "head_shake", "wave", "point", "show", "bend", "plead", "argue", "walk", "run"], 6)
+        combo("Articulated motion", "motion", ["auto", "idle_breathe", "head_nod", "head_shake", "wave", "point", "show", "bend", "plead", "argue", "walk_slow", "walk_normal", "walk_confident", "walk_sad", "run_normal", "run_panicked", "start_walk", "stop_sudden", "step_back", "shock_recoil"], 7, "auto")
         entry("Motion speed", "motion_speed", 8, "1.0")
         entry("Travel X (-1.5 to 1.5)", "travel_x", 9, "0.0")
         combo("Facing", "facing", ["auto", "left", "right"], 10, "auto")
@@ -1092,12 +1259,18 @@ class StudioApp(tk.Tk):
                     self.production_progress["value"] = value
                     self.production_status.configure(text=text, fg=CYAN)
                     self._prod_log(text)
+                elif event == "signal_progress":
+                    value, text = payload  # type: ignore[misc]
+                    self.signal_progress["value"] = value
+                    self.signal_status.configure(text=text, fg=CYAN)
                 elif event.endswith(":error"):
                     name = event.split(":", 1)[0]
                     if name in {"update", "update_install", "keytest"}:
                         self.settings_status.configure(text=f"{name} failed: {payload}", fg=RED)
                     elif name == "diagnostics":
                         self.diagnostics_status.configure(text=f"Analysis failed: {payload}", fg=RED)
+                    elif name in {"signal_preview", "signal_render"}:
+                        self.signal_status.configure(text=f"제작 실패: {payload}", fg=RED)
                     else:
                         self.production_status.configure(text=f"{name} failed", fg=RED)
                         if name == "voice":
@@ -1116,6 +1289,34 @@ class StudioApp(tk.Tk):
                     self.diagnostics_text.delete("1.0", "end")
                     for item in items:
                         self.diagnostics_text.insert("end", f"{'PASS' if item.passed else 'PROBLEM'}  {item.name}\n  {item.detail}\n\n")
+                elif event == "signal_preview:ok":
+                    path = Path(payload)
+                    preview = Image.open(path)
+                    preview.thumbnail((330, 330), Image.Resampling.LANCZOS)
+                    photo = ImageTk.PhotoImage(preview)
+                    self._images["signal_preview"] = photo
+                    self.signal_preview_label.configure(image=photo, text="")
+                    self.signal_status.configure(text="장면 구성을 확인했습니다. 만족하면 최종 영상을 만드세요.", fg=GREEN)
+                elif event == "signal_render:ok":
+                    result = payload
+                    path = Path(result["video"])
+                    self.signal_progress["value"] = 100
+                    self.signal_status.configure(text=f"완성 및 검증 완료\n{path}", fg=GREEN)
+                    sheet = Image.open(result["sheet"])
+                    sheet.thumbnail((330, 330), Image.Resampling.LANCZOS)
+                    photo = ImageTk.PhotoImage(sheet)
+                    self._images["signal_preview"] = photo
+                    self.signal_preview_label.configure(image=photo, text="")
+                    telemetry.capture("abrar_signal214_rendered", {
+                        "duration_seconds": round(self.current_signal_episode.duration, 2) if self.current_signal_episode else 0,
+                        "resolution": "1080x1920", "language": "ko-KR",
+                    })
+                    messagebox.showinfo("한국어 쇼츠 완성", f"완성된 영상을 검증했습니다.\n\n{path}", parent=self)
+                    try:
+                        if os.name == "nt":
+                            os.startfile(path)  # type: ignore[attr-defined]
+                    except OSError:
+                        pass
                 elif event == "voice:ok":
                     self._log_voice(f"Approved take cached:\n{payload}")
                 elif event == "voices:ok":

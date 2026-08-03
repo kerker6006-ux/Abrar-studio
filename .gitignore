@@ -15,3 +15,7 @@ verification_frame_*.png
 release_verification*.json
 diagnostics_report.json
 _recovered_bundle/
+assets/cloud_tts_connection_test.pcm
+assets/gemini_flash_image_connection_test.png
+assets/gemini_flash_image_wrapper_test.png
+signal214_contact_sheet*.jpg

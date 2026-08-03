@@ -15,6 +15,7 @@ class AppSettings:
     project_path: str = ""
     telemetry_enabled: bool = False
     telemetry_consent_shown: bool = False
+    google_cloud_project: str = ""
 
 
 class SettingsStore:

@@ -360,6 +360,14 @@
     "start_walk",
     "stop_sudden",
     "step_back",
-    "shock_recoil"
+    "shock_recoil",
+    "head_nod",
+    "head_shake",
+    "wave",
+    "point",
+    "show",
+    "bend",
+    "plead",
+    "argue"
   ]
 }

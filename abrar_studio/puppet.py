@@ -12,6 +12,7 @@ from PIL import Image, ImageEnhance, ImageOps
 ARTICULATED_MOTIONS = {
     "idle_breathe", "walk_slow", "walk_normal", "walk_confident", "walk_sad",
     "run_normal", "run_panicked", "start_walk", "stop_sudden", "step_back", "shock_recoil",
+    "head_nod", "head_shake", "wave", "point", "show", "bend", "plead", "argue",
     "walking", "walk", "running", "run",
 }
 
@@ -118,6 +119,39 @@ def motion_state(name: str, t: float, progress: float, speed: float = 1.0, cycle
         angles["arm_back_upper"] = -breath * 0.25
         root_dy = -abs(breath) * 0.9
         sy = 1.0 + breath * 0.0025
+        return MotionState(angles, root_dx, root_dy, sx, sy, phase)
+
+    # Short acting clips are deliberately restrained.  They are independent of
+    # camera movement, so several characters can perform them concurrently.
+    # Hand artwork stays attached to the lower-arm rig part: this keeps an arm
+    # wave or point anatomically connected instead of sliding a hand sticker
+    # across the scene.
+    if name in {"head_nod", "head_shake", "wave", "point", "show", "bend", "plead", "argue"}:
+        phase = t * 2.0 * math.pi * max(0.35, speed) + cycle_offset * 2.0 * math.pi
+        pulse = math.sin(phase)
+        half_pulse = math.sin(phase * 0.5)
+        angles["torso"] = pulse * 0.45 * intensity
+        angles["hair_back"] = -pulse * 0.9 * intensity
+        if name == "head_nod":
+            angles["head"] = 7.0 * math.sin(phase) * intensity
+            root_dy = abs(pulse) * 1.2
+        elif name == "head_shake":
+            angles["head"] = 9.0 * math.sin(phase * 1.35) * intensity
+            root_dx = 2.0 * math.sin(phase * 1.35)
+        elif name == "wave":
+            angles.update({"arm_front_upper": -62.0 + 11.0 * math.sin(phase * 2.1), "arm_front_lower": -42.0 + 20.0 * math.sin(phase * 2.1), "head": -1.5 * pulse})
+        elif name == "point":
+            angles.update({"arm_front_upper": -76.0, "arm_front_lower": 24.0, "head": -3.5})
+        elif name == "show":
+            angles.update({"arm_front_upper": -42.0 + 4.0 * pulse, "arm_front_lower": -58.0 + 5.0 * pulse, "head": -2.0})
+        elif name == "bend":
+            bend = 14.0 * (0.45 + 0.55 * math.sin(min(1.0, progress) * math.pi)) * intensity
+            angles.update({"torso": bend, "head": -bend * 0.58, "arm_front_upper": bend * 0.25, "arm_back_upper": bend * 0.18})
+            root_dy = 4.0
+        elif name == "plead":
+            angles.update({"arm_front_upper": -50.0 + 5.0 * pulse, "arm_front_lower": -65.0, "arm_back_upper": -33.0 + 4.0 * pulse, "arm_back_lower": -48.0, "head": 4.0 + 1.5 * pulse})
+        elif name == "argue":
+            angles.update({"arm_front_upper": -68.0 + 15.0 * math.sin(phase * 1.7), "arm_front_lower": 15.0 + 12.0 * math.sin(phase * 1.7), "head": -3.0 * half_pulse})
         return MotionState(angles, root_dx, root_dy, sx, sy, phase)
 
     settings = {
