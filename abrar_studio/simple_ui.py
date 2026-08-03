@@ -4,15 +4,15 @@ import queue
 import subprocess
 import sys
 import threading
-import time
 import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox, ttk
 
+from .audio_director import AudioDirector
 from .constants import APP_NAME, APP_VERSION
 from .paths import app_root, user_data_dir
+from .production_pipeline import ProductionPipeline, ProductionResult
 from .settings import SettingsStore
-from .simple_motion import render_talking_shot
 from .updater import GitHubUpdater, ReleaseInfo, UpdateError
 from .vertex_cloud import VertexCloudError, VertexStudioClient
 
@@ -70,7 +70,7 @@ class SimpleStudioApp(tk.Tk):
         header.pack(fill="x", pady=(0, 20))
         tk.Label(header, text="ABRAR", bg=BG, fg=TEXT, font=("Segoe UI", 29, "bold")).pack(side="left")
         tk.Label(header, text="Korean drama generator", bg=BG, fg=MUTED, font=("Segoe UI", 11)).pack(side="left", padx=(14, 0), pady=(11, 0))
-        self.connection_badge = tk.Label(header, text=" CLOUD READY ", bg="#183b35", fg=GREEN, padx=9, pady=5, font=("Segoe UI", 9, "bold"))
+        self.connection_badge = tk.Label(header, text=" CLOUD NOT CHECKED ", bg="#4b3b24", fg="#ffd38b", padx=9, pady=5, font=("Segoe UI", 9, "bold"))
         self.connection_badge.pack(side="right", pady=(6, 0))
 
         cloud = tk.Frame(content, bg=PANEL, padx=18, pady=14)
@@ -86,20 +86,30 @@ class SimpleStudioApp(tk.Tk):
         editor = tk.Frame(content, bg=PANEL, padx=20, pady=18)
         editor.pack(fill="both", expand=True, pady=(18, 0))
         tk.Label(editor, text="Your episode", bg=PANEL, fg=TEXT, font=("Segoe UI", 15, "bold")).pack(anchor="w")
-        tk.Label(editor, text="Paste a Korean script or describe the scene. Abrar makes a 10-second test first.", bg=PANEL, fg=MUTED, font=("Segoe UI", 10)).pack(anchor="w", pady=(3, 12))
+        tk.Label(editor, text="Paste a Korean script or describe the scene. Characters are created and locked before any shot is rendered.", bg=PANEL, fg=MUTED, font=("Segoe UI", 10)).pack(anchor="w", pady=(3, 6))
+        tk.Label(
+            editor,
+            text="SCRIPT  →  CHARACTER LOCK  →  CONSISTENT LOCATIONS  →  CAMERA SHOTS  →  VOICE + AUDIO  →  VIDEO",
+            bg=PANEL, fg="#c6a9ff", font=("Segoe UI", 9, "bold"),
+        ).pack(anchor="w", pady=(0, 12))
         self.prompt = tk.Text(editor, height=13, bg="#101728", fg=TEXT, insertbackground=TEXT, relief="flat", wrap="word", font=("Segoe UI", 12), padx=14, pady=14)
         self.prompt.pack(fill="both", expand=True)
         self.prompt.insert("1.0", "비 오는 밤, 오래된 아파트 복도에서 지연은 사라진 동생에게서 온 전화를 받는다.")
 
         action = tk.Frame(content, bg=BG)
         action.pack(fill="x", pady=(17, 0))
-        self.generate_button = tk.Button(action, text="Generate video", command=self._generate, bg=PURPLE, fg="white", activebackground="#aa78ff", relief="flat", padx=26, pady=13, font=("Segoe UI", 11, "bold"))
+        self.generate_button = tk.Button(action, text="Generate episode", command=self._generate, bg=PURPLE, fg="white", activebackground="#aa78ff", relief="flat", padx=26, pady=13, font=("Segoe UI", 11, "bold"))
         self.generate_button.pack(side="left")
         self.open_button = tk.Button(action, text="Open video", command=self._open_video, state="disabled", bg="#27344f", fg=TEXT, relief="flat", padx=18, pady=13, font=("Segoe UI", 10, "bold"))
         self.open_button.pack(side="left", padx=(10, 0))
         self.progress = ttk.Progressbar(content, maximum=100, value=0)
         self.progress.pack(fill="x", pady=(18, 0))
-        self.status = tk.Label(content, text="Ready. Paste your episode and generate a 10-second test.", bg=BG, fg=MUTED, anchor="w", justify="left", wraplength=850, font=("Segoe UI", 10))
+        audio_count = AudioDirector([
+            app_root() / "assets" / "music", app_root() / "assets" / "sfx", app_root() / "assets" / "audio_library",
+            user_data_dir() / "AudioLibrary",
+            *[Path(value) for value in self.settings.audio_library_paths if value],
+        ]).catalog_size
+        self.status = tk.Label(content, text=f"Ready • {audio_count} licensed audio files indexed", bg=BG, fg=MUTED, anchor="w", justify="left", wraplength=850, font=("Segoe UI", 10))
         self.status.pack(fill="x", pady=(10, 0))
 
     def _client(self) -> VertexStudioClient:
@@ -140,19 +150,13 @@ class SimpleStudioApp(tk.Tk):
     def _task_generate(self, prompt: str) -> None:
         try:
             client = self._client(); client.verify_credentials()
-            self.events.put(("progress", (8, "Writing the Korean scene…")))
-            narration = client.generate_text("Write ONLY one Korean dramatic monologue of 24 to 34 Korean words. Safe fictional drama, emotional but restrained. Story idea: " + prompt)
-            root = user_data_dir() / "Generations" / time.strftime("%Y%m%d_%H%M%S"); root.mkdir(parents=True, exist_ok=True)
-            self.events.put(("progress", (18, "Generating scene artwork…")))
-            background = client.generate_image("Original premium Korean web-drama 2D animation background only; no people, no text. Scene: " + prompt, root / "background.png", aspect_ratio="9:16")
-            self.events.put(("progress", (34, "Generating locked mouth sheet…")))
-            sheet = client.generate_image("Original premium Korean 2D drama sprite sheet, exactly six equal portrait cells in a 3 by 2 grid. Same adult Korean character, face, hair, clothes, pose and lighting in every cell. Only natural mouth state differs. No text, labels or borders. Story style: " + prompt, root / "mouth_sheet.png", aspect_ratio="9:16")
-            self.events.put(("progress", (48, "Generating Korean voice…")))
-            audio = client.generate_tts(narration, root / "voice.wav", style="quietly tense Korean drama performance, natural pauses")
-            self.events.put(("progress", (55, "Animating locally…")))
-            output = root / "AbrarDrama_10s.mp4"
-            render_talking_shot(background_path=background, mouth_sheet_path=sheet, audio_path=audio, caption=narration, output_path=output, ffmpeg_path=self.settings.ffmpeg_path, progress=lambda value, label: self.events.put(("progress", (round(value * 100), label))))
-            self.events.put(("video", output))
+            extra_audio = [Path(value) for value in self.settings.audio_library_paths if value]
+            pipeline = ProductionPipeline(client, self.settings.ffmpeg_path, extra_audio)
+            result = pipeline.generate(
+                prompt,
+                progress=lambda value, label: self.events.put(("progress", (round(value * 100), label))),
+            )
+            self.events.put(("video", result))
         except Exception as exc:
             self.events.put(("error", str(exc)))
 
@@ -185,7 +189,16 @@ class SimpleStudioApp(tk.Tk):
                 elif event == "ok":
                     self._set_busy(False); self.connection_badge.configure(text=" CLOUD READY ", bg="#183b35", fg=GREEN); self.status.configure(text=str(data), fg=GREEN)
                 elif event == "video":
-                    self._set_busy(False); self.current_output = data; self.progress.configure(value=100); self.status.configure(text=f"Finished: {data}", fg=GREEN); self.open_button.configure(state="normal")
+                    self._set_busy(False)
+                    result: ProductionResult = data
+                    self.current_output = result.output
+                    self.progress.configure(value=100)
+                    self.status.configure(
+                        text=(f"Finished: {len(result.plan.shots)} shots • {len(result.plan.characters)} locked characters • "
+                              f"{result.audio_catalog_size} indexed audio files\n{result.output}"),
+                        fg=GREEN,
+                    )
+                    self.open_button.configure(state="normal")
                 elif event == "update":
                     self._install_update(data)
                 elif event == "error":

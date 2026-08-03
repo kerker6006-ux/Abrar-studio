@@ -24,7 +24,7 @@ class TTSTests(unittest.TestCase):
         self.assertEqual(nr.voice, "Leda")
         self.assertEqual(er.voice, "Leda")
         self.assertEqual(nr.model, "gemini-3.1-flash-tts-preview")
-        self.assertEqual(er.model, "gemini-2.5-pro-preview-tts")
+        self.assertEqual(er.model, "gemini-2.5-pro-tts")
         self.assertEqual(nr.model, GEMINI_FLASH_TTS)
         self.assertEqual(er.model, GEMINI_PRO_TTS)
         self.assertNotEqual(nr.cache_key, er.cache_key)

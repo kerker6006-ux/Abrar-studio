@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from pathlib import Path
 from .paths import user_config_dir
 
@@ -16,6 +16,8 @@ class AppSettings:
     telemetry_enabled: bool = False
     telemetry_consent_shown: bool = False
     google_cloud_project: str = ""
+    audio_library_paths: list[str] = field(default_factory=list)
+    audio_library_paths: list[str] = field(default_factory=list)
 
 
 class SettingsStore:
