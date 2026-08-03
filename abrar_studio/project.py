@@ -53,7 +53,7 @@ class StudioProject:
 
     def ensure_bundled_assets(self) -> None:
         bundled_root = app_root() / "assets"
-        for name in ["characters", "music", "sfx", "backgrounds"]:
+        for name in ["characters", "music", "sfx", "backgrounds", "signal214"]:
             source = bundled_root / name
             target = self.assets_dir / name
             if source.exists():

@@ -11,8 +11,8 @@ def main() -> int:
         from abrar_studio.settings import SettingsStore
 
         configure_sentry(SettingsStore().load().telemetry_enabled)
-        from abrar_studio.ui import StudioApp
-        app = StudioApp()
+        from abrar_studio.simple_ui import SimpleStudioApp
+        app = SimpleStudioApp()
         app.mainloop()
         return 0
     except Exception as exc:
